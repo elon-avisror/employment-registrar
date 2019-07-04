@@ -15,8 +15,8 @@ const loginPasswordSelector = 'input[name="Password"]'
 const loginSubmitSelector = 'button[type="submit"]';
 
 // 2 - system navigation bar
-const systemNavigationBarSelector = 'div[id="sidebar"]';
-const systemTalentManagerSelector = 'ul[class="sub-menu"]';
+const systemNavigationBarSelector = '.has-sub';
+const systemTalentManagerSelector = 'li[class="has-sub expand"]';
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
@@ -25,17 +25,30 @@ const URL = 'http://40.127.202.26:9525';
 var browser = {};
 var page = {};
 
-// navigation between pages
-let clickAndWaitForTarget = async (clickSelector, page, browser) => {
-  const pageTarget = page.target(); //save this to know that this was the opener
-  await page.click(clickSelector); //click on a link
-  const newTarget = await browser.waitForTarget(target => target.opener() === pageTarget); //check that you opened this page, rather than just checking the url
-  const newPage = await newTarget.page(); //get the page object
-  // await newPage.once("load",()=>{}); //this doesn't work; wait till page is loaded
-  await newPage.waitForSelector("body"); //wait for page to be loaded
+//////////////////////////////////////////////////////////////////
+async function isLocatorReady(element, page) {
+  const isVisibleHandle = await page.evaluateHandle((e) => 
+{
+    const style = window.getComputedStyle(e);
+    return (style && style.display !== 'none' && 
+    style.visibility !== 'hidden' && style.opacity !== '0');
+ }, element);
+  var visible = await isVisibleHandle.jsonValue();
+  const box = await element.boxModel();
+  if (visible && box) {
+    return true;
+  }
+  return false;
+}
 
-  return newPage;
+let clickAndWaitForTarget = async (clickSelector) => {
+  const pageTarget = page.target(); // save this to know that this was the opener
+  await page.click(clickSelector); // click on a link
+  page = await browser.waitForTarget(target => target.opener() === pageTarget); // check that you opened this page, rather than just checking the url
+  // await newPage.once("load",()=>{}); // this doesn't work; wait till page is loaded
+  await page.waitForSelector("body"); // wait for page to be loaded
 };
+//////////////////////////////////////////////////////////////////
 
 async function login() {
   try {
@@ -55,7 +68,9 @@ async function login() {
     // submit
     await page.waitFor(loginSubmitSelector);
     await page.evaluate((loginSubmitSelector) => document.querySelector(loginSubmitSelector).click(), loginSubmitSelector);
-    await page.click(loginSubmitSelector);
+    await clickAndWaitForTarget(loginSubmitSelector);
+    //page = await clickAndWaitForTarget(loginSubmitSelector, page, browser);
+
   }
   catch (e) {
     if (DEBUG) {
@@ -64,16 +79,16 @@ async function login() {
       else
         console.log('login: ' + e.message);
     }
-
   }
+  return page;
 }
 
 async function systemNavigation() {
   try {
-
     await page.waitFor(systemNavigationBarSelector);
-    await page.evaluate((systemTalentManagerSelector) => document.querySelector(systemTalentManagerSelector).click(), systemTalentManagerSelector);
-    await page.click(systemTalentManagerSelector);
+    //let messagesList = await page.evaluateHandle(selector => document.getElementsByClassName(selector), systemNavigationBarSelector);
+    //console.log(messagesList);
+    await page.waitFor('li[class="has-sub expand"]');
   }
   catch (e) {
     if (DEBUG)
@@ -128,8 +143,7 @@ async function systemNavigation() {
     }); */
 
     // 0 - start crawlering
-    await page.goto(URL);
-
+    await page.goto(URL, {waitUntil: "networkidle2"});
 
     // 1 - login
     await login();
