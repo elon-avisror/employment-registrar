@@ -1,33 +1,122 @@
 const puppeteer = require('puppeteer');
- 
+//var fs = require('fs');
+
 // hard coded strings and settings
 const isheadless = false;
-const userDataLocation = "/user_data_bn_";
+const browserWidth = 1920 / 1.5;
+const browserHeight = 1080 / 1.5;
+//const userDataLocation = '/user_data_bn_';
+const loginUserData = 'jenya0025';
+const loginPasswordData = 'fvs3T73%T6';
+
+// 1 - login
+const loginUserSelector = 'input[name="Email"]';
+const loginPasswordSelector = 'input[name="Password"]'
+const loginSubmitSelector = 'button[type="submit"]';
+
+// 2 - system navigation bar
+const systemNavigationBarSelector = 'div[id="sidebar"]';
+const systemTalentManagerSelector = 'ul[class="sub-menu"]';
+
 const DEBUG = true;
+const URL = 'http://40.127.202.26:9525';
 
 // global variables
-//var browser = {};
-//var page = {};
+var browser = {};
+var page = {};
 
-// main script
+// navigation between pages
+let clickAndWaitForTarget = async (clickSelector, page, browser) => {
+  const pageTarget = page.target(); //save this to know that this was the opener
+  await page.click(clickSelector); //click on a link
+  const newTarget = await browser.waitForTarget(target => target.opener() === pageTarget); //check that you opened this page, rather than just checking the url
+  const newPage = await newTarget.page(); //get the page object
+  // await newPage.once("load",()=>{}); //this doesn't work; wait till page is loaded
+  await newPage.waitForSelector("body"); //wait for page to be loaded
+
+  return newPage;
+};
+
+async function login() {
+  try {
+
+    // user
+    await page.waitFor(loginUserSelector);
+    await page.evaluate((loginUserSelector) => document.querySelector(loginUserSelector).click(), loginUserSelector);
+    await page.click(loginUserSelector);
+    await page.type(loginUserSelector, loginUserData);
+
+    // password
+    await page.waitFor(loginPasswordSelector);
+    await page.evaluate((loginPasswordSelector) => document.querySelector(loginPasswordSelector).click(), loginPasswordSelector);
+    await page.click(loginPasswordSelector);
+    await page.type(loginPasswordSelector, loginPasswordData);
+
+    // submit
+    await page.waitFor(loginSubmitSelector);
+    await page.evaluate((loginSubmitSelector) => document.querySelector(loginSubmitSelector).click(), loginSubmitSelector);
+    await page.click(loginSubmitSelector);
+  }
+  catch (e) {
+    if (DEBUG) {
+      if (e.message == 'Execution context was destroyed, most likely because of a navigation.')
+        console.log('Loged in');
+      else
+        console.log('login: ' + e.message);
+    }
+
+  }
+}
+
+async function systemNavigation() {
+  try {
+
+    await page.waitFor(systemNavigationBarSelector);
+    await page.evaluate((systemTalentManagerSelector) => document.querySelector(systemTalentManagerSelector).click(), systemTalentManagerSelector);
+    await page.click(systemTalentManagerSelector);
+  }
+  catch (e) {
+    if (DEBUG)
+      console.log('systemNavigation: ' + e.message);
+  }
+}
+
+// main script code
 (async () => {
 
+    /*
+    // make new directory
+    let num = 1;
+    while (fs.existsSync(__dirname + userDataLocation + num)) {
+      num++;
+    }
+    */
+
     // setting chrome environment
-    /*const browserOptions = {
-      headless: isheadless, //so we can scan the QR code
-      userDataDir: path.join(__dirname + userDataLocation + num), //so we can save session data from one run to another. full path due to a bug in headlesschrome 
+    const browserOptions = {
+      headless: isheadless, // so we can see the automation
+      //userDataDir: path.join(__dirname + userDataLocation + num), // so we can save session data from one run to another. full path due to a bug in headlesschrome 
       args: ['--no-sandbox']
-    }; */
+    };
 
 
   try
   {
-    //browser = await puppeteer.launch(browserOptions);
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    // 0 - start crawerling
+    browser = await puppeteer.launch(browserOptions);
+    page = await browser.newPage();
+    page.setCacheEnabled(false);
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36');
+    await page.setViewport({
+      width: browserWidth,
+      height: browserHeight,
+      deviceScaleFactor: 2
+    });
 
-    console.log("Starting browser");
-    console.log(await browser.version());
+    if (DEBUG) {
+      console.log('Starting browser crawlering');
+      console.log('Browser Version: ' + await browser.version());
+    }
 
     /*page = await browser.newPage();
     page.setCacheEnabled(false);
@@ -38,19 +127,29 @@ const DEBUG = true;
       deviceScaleFactor: 2
     }); */
 
-    // start crawlering
-    await page.goto('https://example.com');
-    await page.screenshot({path: 'example.png'});
+    // 0 - start crawlering
+    await page.goto(URL);
 
-    // end
-    await browser.close();
 
-    console.log("Closing browser");
-    if (isheadless)
+    // 1 - login
+    await login();
+
+    // 2 - system navigation
+    await systemNavigation();
+
+
+    // * - end
+    if (isheadless) {
       await browser.close();
+      if (DEBUG)
+        console.log('Closing browser crawlering');
+    }
+    else if (DEBUG)
+      console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
   catch (e)
   {
-    if (DEBUG) console.log(e);
+    if (DEBUG)
+      console.log(e);
   }
 })();
