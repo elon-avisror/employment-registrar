@@ -23,8 +23,16 @@ const systemApplicationsSelector = 'a[href="/WFM/TM/Application/List"]';
 const applicantTypeSelector = 'span[data-bind="text: GetSelectedSearch()"]';
 const applicantIDSelector = 'a[href="#"]';
 
-// 4 - assignment routine
-const applicantFieldSelector = 'input[class="input-xlarge form-control"]';
+// 4.a - assignment
+const assignmentFieldSelector = 'input[class="input-xlarge form-control"]';
+const assignmentApplicantIDSelector = '200656627';
+const assignmentSearchButtonSelector = 'button[class="btn btn-success"]';
+const assignmentTableSelector = 'tbody[data-bind="foreach: Items"]';
+const assignmentApplicantUserSelector = 'a[targer="_blank"]';
+
+// 4.b - workflow process
+//const workflowProcessTabSelector = 'a[class="nav-link active show"]';
+const workflowProccessCheckSelector = 'a[#tab-requestForHire]';
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
@@ -59,7 +67,6 @@ let clickAndWaitForTarget = async (clickSelector) => {
   const pageTarget = page.target(); // save this to know that this was the opener
   await page.click(clickSelector); // click on a link
   page = await browser.waitForTarget(target => target.opener() === pageTarget); // check that you opened this page, rather than just checking the url
-  // await newPage.once("load",()=>{}); // this doesn't work; wait till page is loaded
   await page.waitForSelector("body"); // wait for page to be loaded
 };
 
@@ -87,7 +94,7 @@ async function login() {
   catch (e) {
     if (DEBUG) {
       if (e.message == 'Execution context was destroyed, most likely because of a navigation.')
-        console.log('Loged in');
+        console.log('1 - Loged in');
       else
         console.log('login: ' + e.message);
     }
@@ -101,6 +108,9 @@ async function systemNavigation() {
     await page.waitFor(systemNavigationBarSelector);
     await page.evaluate((systemApplicationsSelector) => document.querySelector(systemApplicationsSelector).click(), systemApplicationsSelector);
     await page.waitFor(2000); // time for navigation
+
+    if (DEBUG)
+      console.log('2 - Navigate');
   }
   catch (e) {
     if (DEBUG)
@@ -111,11 +121,14 @@ async function systemNavigation() {
 async function applicationFound() {
   try {
 
+    // goto applications
+    await page.waitFor(2000); // time for button
     await page.waitFor(applicantTypeSelector);
     await page.evaluate((applicantTypeSelector) => document.querySelector(applicantTypeSelector).click(), applicantTypeSelector);
-    
+
     await page.waitFor(applicantIDSelector);
     const linkHandlers = await page.$x("//a[contains(text(), 'Applicant Israel ID')]");
+    await page.waitFor(2000); // time for data
 
     if (linkHandlers.length > 0) {
       await linkHandlers[0].click();
@@ -123,6 +136,8 @@ async function applicationFound() {
       throw new Error("Link not found");
     }
 
+    if (DEBUG)
+      console.log('3 - Application Found');
   }
   catch (e) {
     if (DEBUG)
@@ -134,10 +149,55 @@ async function assignmentRoutine() {
 
   try {
 
+    // id
+    await page.waitFor(assignmentFieldSelector);
+    await page.evaluate((assignmentFieldSelector) => document.querySelector(assignmentFieldSelector).click(), assignmentFieldSelector);
+    await page.click(assignmentFieldSelector);
+    await page.type(assignmentFieldSelector, assignmentApplicantIDSelector);
+
+    // init search
+    await page.waitFor(assignmentSearchButtonSelector);
+    await page.evaluate((assignmentSearchButtonSelector) => document.querySelector(assignmentSearchButtonSelector).click(), assignmentSearchButtonSelector);
+
+    // searching the id
+    await page.waitFor(5000); // time for init search
+    await page.waitFor(assignmentTableSelector);
+    await page.click(assignmentSearchButtonSelector);
+
+    // go to workflow process
+    await page.waitFor(assignmentApplicantUserSelector);
+    await page.evaluate((assignmentApplicantUserSelector) => document.querySelector(assignmentApplicantUserSelector).click(), assignmentApplicantUserSelector);
+    await page.waitFor(5000); // time for redirecting
+
+    if (DEBUG)
+      console.log('4.a - Found ID');
+
   }
   catch (e) {
     if (DEBUG)
       console.log('assignmentRoutine: ' + e.message);
+  }
+}
+
+async function workflowProcessRoutine() {
+  try {
+
+    // workflow tab
+    await page.evaluate((workflowProccessCheckSelector) => document.querySelector(workflowProccessCheckSelector).click(), workflowProccessCheckSelector);
+    const linkHandlers = await page.$x("//a[contains(text(), 'Hiring Workflow')]");
+
+    if (linkHandlers.length > 0) {
+      await linkHandlers[0].click();
+    } else {
+      throw new Error("Link not found");
+    }
+
+    if (DEBUG)
+      console.log('4.b - Go to WorkFlow Process');
+  }
+  catch (e) {
+    if (DEBUG)
+      console.log('workflowProcessRoutine: ' + e.message);
   }
 }
 
@@ -202,8 +262,16 @@ async function assignmentRoutine() {
     // 3 - appliacations
     await applicationFound();
 
-    // 4 - assignment routine
+
+    /* ROUTINE */
+
+    // 4.a - assignment
     await assignmentRoutine();
+
+    // 4.b - workflow process
+    await workflowProcessRoutine();
+
+    /* ROUTINE */
 
     // TODO: continue...
     if (DEBUG)
