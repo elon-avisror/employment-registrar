@@ -17,10 +17,14 @@ const loginSubmitSelector = 'button[type="submit"]';
 
 // 2 - system navigation bar
 const systemNavigationBarSelector = '.has-sub';
-const systemApplications = 'a[href="/WFM/TM/Application/List"]';
+const systemApplicationsSelector = 'a[href="/WFM/TM/Application/List"]';
 
 // 3 - applications
-const applicationsID = 'input[class="input-xlarge form-control"]';
+const applicantTypeSelector = 'span[data-bind="text: GetSelectedSearch()"]';
+const applicantIDSelector = 'a[href="#"]';
+
+// 4 - assignment routine
+const applicantFieldSelector = 'input[class="input-xlarge form-control"]';
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
@@ -93,25 +97,47 @@ async function login() {
 
 async function systemNavigation() {
   try {
-    await page.waitFor(systemNavigationBarSelector);
-    await page.evaluate((systemApplications) => document.querySelector(systemApplications).click(), systemApplications);
-    await page.waitFor(2000); // time for navigation
 
+    await page.waitFor(systemNavigationBarSelector);
+    await page.evaluate((systemApplicationsSelector) => document.querySelector(systemApplicationsSelector).click(), systemApplicationsSelector);
+    await page.waitFor(2000); // time for navigation
   }
   catch (e) {
-    if (DEBUG) {
+    if (DEBUG)
       console.log('systemNavigation: ' + e.message);
-    }
   }
 }
 
 async function applicationFound() {
   try {
 
+    await page.waitFor(applicantTypeSelector);
+    await page.evaluate((applicantTypeSelector) => document.querySelector(applicantTypeSelector).click(), applicantTypeSelector);
+    
+    await page.waitFor(applicantIDSelector);
+    const linkHandlers = await page.$x("//a[contains(text(), 'Applicant Israel ID')]");
+
+    if (linkHandlers.length > 0) {
+      await linkHandlers[0].click();
+    } else {
+      throw new Error("Link not found");
+    }
+
   }
   catch (e) {
     if (DEBUG)
       console.log('applicationFound: ' + e.message);
+  }
+}
+
+async function assignmentRoutine() {
+
+  try {
+
+  }
+  catch (e) {
+    if (DEBUG)
+      console.log('assignmentRoutine: ' + e.message);
   }
 }
 
@@ -171,10 +197,13 @@ async function applicationFound() {
     await login();
 
     // 2 - system navigation
-    page = await systemNavigation();
+    await systemNavigation();
 
     // 3 - appliacations
     await applicationFound();
+
+    // 4 - assignment routine
+    await assignmentRoutine();
 
     // TODO: continue...
     if (DEBUG)
