@@ -31,8 +31,10 @@ const assignmentTableSelector = 'tbody[data-bind="foreach: Items"]';
 const assignmentApplicantUserSelector = 'a[targer="_blank"]';
 
 // 4.b - workflow process
-//const workflowProcessTabSelector = 'a[class="nav-link active show"]';
-const workflowProccessCheckSelector = 'a[#tab-requestForHire]';
+const workflowProcessTabSelector = 'a[class="nav-link"]';
+const workflowProccessCheckSelector = 'li[data-bind="visible:CanViewRFH"]';
+
+//const workflowProccessCheckSelector = 'a[#tab-requestForHire]';
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
@@ -62,6 +64,22 @@ async function isLocatorReady(element, page) {
   return false;
 }
 */
+
+const escapeXpathString = str => {
+  const splitedQuotes = str.replace(/'/g, `', "'", '`);
+  return `concat('${splitedQuotes}', '')`;
+};
+
+const clickByText = async (text) => {
+  const escapedText = escapeXpathString(text);
+  const linkHandlers = await page.$x(`//a[contains(text(), ${escapedText})]`);
+  
+  if (linkHandlers.length > 0) {
+    await linkHandlers[0].click();
+  } else {
+    throw new Error(`Link not found: ${text}`);
+  }
+};
 
 let clickAndWaitForTarget = async (clickSelector) => {
   const pageTarget = page.target(); // save this to know that this was the opener
@@ -127,14 +145,8 @@ async function applicationFound() {
     await page.evaluate((applicantTypeSelector) => document.querySelector(applicantTypeSelector).click(), applicantTypeSelector);
 
     await page.waitFor(applicantIDSelector);
-    const linkHandlers = await page.$x("//a[contains(text(), 'Applicant Israel ID')]");
+    await clickByText(`Applicant Israel ID`);
     await page.waitFor(2000); // time for data
-
-    if (linkHandlers.length > 0) {
-      await linkHandlers[0].click();
-    } else {
-      throw new Error("Link not found");
-    }
 
     if (DEBUG)
       console.log('3 - Application Found');
@@ -183,14 +195,10 @@ async function workflowProcessRoutine() {
   try {
 
     // workflow tab
-    await page.evaluate((workflowProccessCheckSelector) => document.querySelector(workflowProccessCheckSelector).click(), workflowProccessCheckSelector);
-    const linkHandlers = await page.$x("//a[contains(text(), 'Hiring Workflow')]");
-
-    if (linkHandlers.length > 0) {
-      await linkHandlers[0].click();
-    } else {
-      throw new Error("Link not found");
-    }
+    await page.waitFor(workflowProcessTabSelector);
+    //await page.evaluate((workflowProccessCheckSelector) => document.querySelector(workflowProccessCheckSelector).click(), workflowProccessCheckSelector);
+    //const linkHandlers = await page.$x("//a[contains(text(), 'Hiring Workflow')]");
+    await clickByText(`Hiring Workflow`);
 
     if (DEBUG)
       console.log('4.b - Go to WorkFlow Process');
@@ -253,6 +261,8 @@ async function workflowProcessRoutine() {
 
     await page.goto(URL, {waitUntil: "networkidle2"});
     
+    /* ONCE */
+
     // 1 - login
     await login();
 
@@ -262,6 +272,7 @@ async function workflowProcessRoutine() {
     // 3 - appliacations
     await applicationFound();
 
+    /* ONCE */
 
     /* ROUTINE */
 
