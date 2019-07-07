@@ -1,7 +1,8 @@
 const puppeteer = require('puppeteer');
 //var fs = require('fs');
 
-// hard coded strings and settings
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 const isheadless = false;
 const browserWidth = 1920 / 1.5;
 const browserHeight = 1080 / 1.5;
@@ -16,16 +17,24 @@ const loginSubmitSelector = 'button[type="submit"]';
 
 // 2 - system navigation bar
 const systemNavigationBarSelector = '.has-sub';
-const systemTalentManagerSelector = 'li[class="has-sub expand"]';
+const systemApplications = 'a[href="/WFM/TM/Application/List"]';
+
+// 3 - applications
+const applicationsID = 'input[class="input-xlarge form-control"]';
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
+const END = false;
 
 // global variables
 var browser = {};
 var page = {};
 
-//////////////////////////////////////////////////////////////////
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/*
 async function isLocatorReady(element, page) {
   const isVisibleHandle = await page.evaluateHandle((e) => 
 {
@@ -40,6 +49,7 @@ async function isLocatorReady(element, page) {
   }
   return false;
 }
+*/
 
 let clickAndWaitForTarget = async (clickSelector) => {
   const pageTarget = page.target(); // save this to know that this was the opener
@@ -48,7 +58,6 @@ let clickAndWaitForTarget = async (clickSelector) => {
   // await newPage.once("load",()=>{}); // this doesn't work; wait till page is loaded
   await page.waitForSelector("body"); // wait for page to be loaded
 };
-//////////////////////////////////////////////////////////////////
 
 async function login() {
   try {
@@ -69,7 +78,6 @@ async function login() {
     await page.waitFor(loginSubmitSelector);
     await page.evaluate((loginSubmitSelector) => document.querySelector(loginSubmitSelector).click(), loginSubmitSelector);
     await clickAndWaitForTarget(loginSubmitSelector);
-    //page = await clickAndWaitForTarget(loginSubmitSelector, page, browser);
 
   }
   catch (e) {
@@ -86,15 +94,30 @@ async function login() {
 async function systemNavigation() {
   try {
     await page.waitFor(systemNavigationBarSelector);
-    //let messagesList = await page.evaluateHandle(selector => document.getElementsByClassName(selector), systemNavigationBarSelector);
-    //console.log(messagesList);
-    await page.waitFor('li[class="has-sub expand"]');
+    await page.evaluate((systemApplications) => document.querySelector(systemApplications).click(), systemApplications);
+    await page.waitFor(2000); // time for navigation
+
+  }
+  catch (e) {
+    if (DEBUG) {
+      console.log('systemNavigation: ' + e.message);
+    }
+  }
+}
+
+async function applicationFound() {
+  try {
+
   }
   catch (e) {
     if (DEBUG)
-      console.log('systemNavigation: ' + e.message);
+      console.log('applicationFound: ' + e.message);
   }
 }
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 // main script code
 (async () => {
@@ -117,7 +140,7 @@ async function systemNavigation() {
 
   try
   {
-    // 0 - start crawerling
+    // 0 - set settings
     browser = await puppeteer.launch(browserOptions);
     page = await browser.newPage();
     page.setCacheEnabled(false);
@@ -142,23 +165,19 @@ async function systemNavigation() {
       deviceScaleFactor: 2
     }); */
 
-    // 0 - start crawlering
     await page.goto(URL, {waitUntil: "networkidle2"});
-
+    
     // 1 - login
     await login();
 
     // 2 - system navigation
-    await systemNavigation();
+    page = await systemNavigation();
 
+    // 3 - appliacations
+    await applicationFound();
 
-    // * - end
-    if (isheadless) {
-      await browser.close();
-      if (DEBUG)
-        console.log('Closing browser crawlering');
-    }
-    else if (DEBUG)
+    // TODO: continue...
+    if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
   catch (e)
@@ -166,4 +185,13 @@ async function systemNavigation() {
     if (DEBUG)
       console.log(e);
   }
+
+  // * - end
+  if (END) {
+    await browser.close();
+    if (DEBUG)
+      console.log('Closing browser crawlering');
+  }
 })();
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
