@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+// 0 - set settings
 const isheadless = false;
 const browserWidth = 1920 / 1.5;
 const browserHeight = 1080 / 1.5;
@@ -25,16 +26,29 @@ const applicantIDSelector = 'a[href="#"]';
 
 // 4.a - assignment
 const assignmentFieldSelector = 'input[class="input-xlarge form-control"]';
-const assignmentApplicantIDSelector = '200656627';
 const assignmentSearchButtonSelector = 'button[class="btn btn-success"]';
 const assignmentTableSelector = 'tbody[data-bind="foreach: Items"]';
 const assignmentApplicantUserSelector = 'a[targer="_blank"]';
 
 // 4.b - workflow process
 const workflowProcessTabSelector = 'a[class="nav-link"]';
-const workflowProccessCheckSelector = 'li[data-bind="visible:CanViewRFH"]';
+const workflowProcessCheckSelector = 'li[data-bind="visible:CanViewRFH"]';
+const workflowProcessButtonSelector = '//*[@id="myTabs"]/li[9]/a';
+const workflowProcessLinkSelectSelector = 'select[class="col-md-8 form-control"]';
+const workflowProcessLinkValueSelector = '18';
+const workflowProcessSubmitSelector = 'button[class="btn btn-success "]';
+const workflowProcessWaitSelector = 'div[class="col-md-6"]';
+const workflowProcessMakeSelector = '//*[@id="0"]/div/div/div[6]/div[3]/button[1]';
+const workflowProcessFormSelector = '//*[@id="rfhTasksEmployment-details"]';
+const workflowProcessContractDepartmentSelectSelector = 'select[id="employment-Department"]';
+const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
+const workflowProcessContractDateSelector = 'input[id="employment-EmploymentStart"]';
 
-//const workflowProccessCheckSelector = 'a[#tab-requestForHire]';
+// EXCEL FILE DATA
+const assignmentApplicantIDSelector = '200656627';
+const workflowProcessContractDepartmentValueSelector = '01-ירושלים';
+const workflowProcessContractPositionValueSelector = 'טסט';
+
 
 const DEBUG = true;
 const URL = 'http://40.127.202.26:9525';
@@ -73,7 +87,17 @@ const escapeXpathString = str => {
 const clickByText = async (text) => {
   const escapedText = escapeXpathString(text);
   const linkHandlers = await page.$x(`//a[contains(text(), ${escapedText})]`);
-  
+
+  if (linkHandlers.length > 0) {
+    await linkHandlers[0].click();
+  } else {
+    throw new Error(`Link not found: ${text}`);
+  }
+};
+
+const clickByXPath = async (xpath) => {
+  const linkHandlers = await page.$x(xpath);
+
   if (linkHandlers.length > 0) {
     await linkHandlers[0].click();
   } else {
@@ -124,6 +148,7 @@ async function systemNavigation() {
   try {
 
     await page.waitFor(systemNavigationBarSelector);
+    await page.waitFor(1000); // time for extra
     await page.evaluate((systemApplicationsSelector) => document.querySelector(systemApplicationsSelector).click(), systemApplicationsSelector);
     await page.waitFor(2000); // time for navigation
 
@@ -140,13 +165,13 @@ async function applicationFound() {
   try {
 
     // goto applications
-    await page.waitFor(2000); // time for button
+    await page.waitFor(3000); // time for button
     await page.waitFor(applicantTypeSelector);
     await page.evaluate((applicantTypeSelector) => document.querySelector(applicantTypeSelector).click(), applicantTypeSelector);
 
     await page.waitFor(applicantIDSelector);
     await clickByText(`Applicant Israel ID`);
-    await page.waitFor(2000); // time for data
+    await page.waitFor(3000); // time for data
 
     if (DEBUG)
       console.log('3 - Application Found');
@@ -181,6 +206,11 @@ async function assignmentRoutine() {
     await page.evaluate((assignmentApplicantUserSelector) => document.querySelector(assignmentApplicantUserSelector).click(), assignmentApplicantUserSelector);
     await page.waitFor(5000); // time for redirecting
 
+    // reload new tab page
+    const pages = await browser.pages();
+    const size = pages.length;
+    page = pages[size - 1];
+
     if (DEBUG)
       console.log('4.a - Found ID');
 
@@ -191,14 +221,61 @@ async function assignmentRoutine() {
   }
 }
 
+
+
 async function workflowProcessRoutine() {
   try {
 
-    // workflow tab
+    async function createLink() {
+
+      // select
+      await page.waitFor(2000); // time for select
+      await page.waitFor(workflowProcessLinkSelectSelector);
+      await page.select(workflowProcessLinkSelectSelector, workflowProcessLinkValueSelector);
+
+      // submit
+      await page.waitFor(workflowProcessSubmitSelector);
+      await page.evaluate((workflowProcessSubmitSelector) => document.querySelector(workflowProcessSubmitSelector).click(), workflowProcessSubmitSelector);
+      await page.waitFor(workflowProcessWaitSelector);
+    }
+
+    async function fullfillContract() {
+
+      async function selectData(id ,selector, data) {
+
+        await page.waitFor(selector);
+        const option = (await page.$x(
+          `${id}/option[text() = "${data}"]`
+        ))[0];
+        const value = await (await option.getProperty('value')).jsonValue();
+        await page.select(selector, value);
+      }
+
+      // contract
+      await page.waitFor(workflowProcessMakeSelector);
+      await clickByXPath(workflowProcessMakeSelector);
+      await page.waitFor(workflowProcessFormSelector);
+
+      // election
+      await selectData('//*[@id="employment-Department"]' ,workflowProcessContractDepartmentSelectSelector, workflowProcessContractDepartmentValueSelector);
+
+      // position
+      await selectData('//*[@id="employment-Position"]' ,workflowProcessContractPositionSelectSelector, workflowProcessContractPositionValueSelector);
+    }
+
+    // in workflow tab, press on 'Hiring Workflow' tab
+    await page.waitFor(2000); // time for delay
     await page.waitFor(workflowProcessTabSelector);
-    //await page.evaluate((workflowProccessCheckSelector) => document.querySelector(workflowProccessCheckSelector).click(), workflowProccessCheckSelector);
-    //const linkHandlers = await page.$x("//a[contains(text(), 'Hiring Workflow')]");
-    await clickByText(`Hiring Workflow`);
+    await page.waitFor(workflowProcessCheckSelector);
+    await page.waitFor(workflowProcessButtonSelector);
+    await clickByXPath(workflowProcessButtonSelector);
+
+    // a
+    await createLink();
+
+    // b
+    await fullfillContract();
+
 
     if (DEBUG)
       console.log('4.b - Go to WorkFlow Process');
@@ -216,24 +293,23 @@ async function workflowProcessRoutine() {
 // main script code
 (async () => {
 
-    /*
-    // make new directory
-    let num = 1;
-    while (fs.existsSync(__dirname + userDataLocation + num)) {
-      num++;
-    }
-    */
+  /*
+  // make new directory
+  let num = 1;
+  while (fs.existsSync(__dirname + userDataLocation + num)) {
+    num++;
+  }
+  */
 
-    // setting chrome environment
-    const browserOptions = {
-      headless: isheadless, // so we can see the automation
-      //userDataDir: path.join(__dirname + userDataLocation + num), // so we can save session data from one run to another. full path due to a bug in headlesschrome 
-      args: ['--no-sandbox']
-    };
+  // setting chrome environment
+  const browserOptions = {
+    headless: isheadless, // so we can see the automation
+    //userDataDir: path.join(__dirname + userDataLocation + num), // so we can save session data from one run to another. full path due to a bug in headlesschrome 
+    args: ['--no-sandbox']
+  };
 
 
-  try
-  {
+  try {
     // 0 - set settings
     browser = await puppeteer.launch(browserOptions);
     page = await browser.newPage();
@@ -259,8 +335,8 @@ async function workflowProcessRoutine() {
       deviceScaleFactor: 2
     }); */
 
-    await page.goto(URL, {waitUntil: "networkidle2"});
-    
+    await page.goto(URL, { waitUntil: "networkidle2" });
+
     /* ONCE */
 
     // 1 - login
@@ -288,8 +364,7 @@ async function workflowProcessRoutine() {
     if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
-  catch (e)
-  {
+  catch (e) {
     if (DEBUG)
       console.log(e);
   }
