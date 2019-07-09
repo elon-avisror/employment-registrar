@@ -19,7 +19,8 @@ const passSelector = 'input[name="Password"]'
 const submitSelector = 'button[type="submit"]';
 
 // 2 - system navigation bar
-const navbarSelector = '.has-sub';
+const systemNavBarSelector = '.has-sub';
+const systemApplicationsSelector = 'a[href="/WFM/TM/Application/List"]';
 
 // 3 - applications
 const applicantTypeSelector = 'span[data-bind="text: GetSelectedSearch()"]';
@@ -176,9 +177,11 @@ async function systemNavigation() {
   try {
 
     // navigate to talent manager
+    await page.waitFor(systemNavBarSelector);
     await page.waitFor(1000); // time for extra
-    await justClick(navbarSelector);
+    await justClick(systemApplicationsSelector);
     await page.waitFor(2000); // time for navigation
+    
 
     if (DEBUG)
       console.log('2 - Navigate');
@@ -455,6 +458,7 @@ async function workflowProcessRoutine() {
 
 
   try {
+    
     // 0 - set settings
     browser = await puppeteer.launch(browserOptions);
     page = await browser.newPage();
