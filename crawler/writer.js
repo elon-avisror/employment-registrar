@@ -8,17 +8,18 @@ const isheadless = false;
 const browserWidth = 1920 / 1.5;
 const browserHeight = 1080 / 1.5;
 //const userDataLocation = '/user_data_bn_';
-const loginUserData = 'jenya0025';
-const loginPasswordData = 'fvs3T73%T6';
+
+// TODO: get from the command line
+const userData = 'jenya0025';
+const passData = 'fvs3T73%T6';
 
 // 1 - login
-const loginUserSelector = 'input[name="Email"]';
-const loginPasswordSelector = 'input[name="Password"]'
-const loginSubmitSelector = 'button[type="submit"]';
+const userSelector = 'input[name="Email"]';
+const passSelector = 'input[name="Password"]'
+const submitSelector = 'button[type="submit"]';
 
 // 2 - system navigation bar
-const systemNavigationBarSelector = '.has-sub';
-const systemApplicationsSelector = 'a[href="/WFM/TM/Application/List"]';
+const navbarSelector = '.has-sub';
 
 // 3 - applications
 const applicantTypeSelector = 'span[data-bind="text: GetSelectedSearch()"]';
@@ -42,16 +43,30 @@ const workflowProcessMakeSelector = '//*[@id="0"]/div/div/div[6]/div[3]/button[1
 const workflowProcessFormSelector = '//*[@id="rfhTasksEmployment-details"]';
 const workflowProcessContractDepartmentSelectSelector = 'select[id="employment-Department"]';
 const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
-const workflowProcessContractDateSelector = 'input[id="employment-EmploymentStart"]';
+const workflowProcessContractDateOfHireSelector = 'input[id="employment-EmploymentStart"]';
+const workflowProcessContractDateOfElectionsSelector = 'input[id="employment-EmploymentEnd"]';
+
+//const workflowProcessContractConfirmSelector = 'button[class="btn btn-success btn-sm"]';
+//const workflowProcessFinalizeButtonSelector = 'button[class="btn btn-primary btn-sm"]';
+
+const workflowProcessContractConfirmSelector = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
+const workflowProcessFinalizeButtonSelector = '//*[@id="1"]/div/div/div[22]/button[1]';
+
+//const workflowProcessPopupSelector = 'div[class="modal-content"]';
+
+const workflowProcessPopupSelector = '//*[@id="finalizeEmployee-modal"]/div/div/div[3]/button[1]';
+const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
 
 // EXCEL FILE DATA
 const assignmentApplicantIDSelector = '200656627';
 const workflowProcessContractDepartmentValueSelector = '01-ירושלים';
 const workflowProcessContractPositionValueSelector = 'טסט';
+const workflowProcessContractDateOfHireValueSelector = '14-06-2019';
+const workflowProcessContractDateOfElectionsValueSelector = '17-09-2019';
 
 
 const DEBUG = true;
-const URL = 'http://40.127.202.26:9525';
+const URL = 'pwm:9525';
 const END = false;
 
 // global variables
@@ -96,6 +111,7 @@ const clickByText = async (text) => {
 };
 
 const clickByXPath = async (xpath) => {
+  await page.waitFor(xpath);
   const linkHandlers = await page.$x(xpath);
 
   if (linkHandlers.length > 0) {
@@ -112,25 +128,37 @@ let clickAndWaitForTarget = async (clickSelector) => {
   await page.waitForSelector("body"); // wait for page to be loaded
 };
 
+async function clickAndType(selector, text) {
+  await page.waitFor(selector);
+  await page.evaluate((selector) => document.querySelector(selector).click(), selector);
+  await page.click(selector);
+  await page.type(selector, text);
+}
+
+async function justClick(selector) {
+  await page.waitFor(selector);
+  await page.evaluate((selector) => document.querySelector(selector).click(), selector);
+}
+
+async function justSelect(selector, select) {
+  await page.waitFor(selector);
+  await page.select(selector, select);
+}
+
 async function login() {
   try {
 
     // user
-    await page.waitFor(loginUserSelector);
-    await page.evaluate((loginUserSelector) => document.querySelector(loginUserSelector).click(), loginUserSelector);
-    await page.click(loginUserSelector);
-    await page.type(loginUserSelector, loginUserData);
+    await clickAndType(userSelector, userData);
 
     // password
-    await page.waitFor(loginPasswordSelector);
-    await page.evaluate((loginPasswordSelector) => document.querySelector(loginPasswordSelector).click(), loginPasswordSelector);
-    await page.click(loginPasswordSelector);
-    await page.type(loginPasswordSelector, loginPasswordData);
+    await clickAndType(passSelector, passData);
 
     // submit
-    await page.waitFor(loginSubmitSelector);
-    await page.evaluate((loginSubmitSelector) => document.querySelector(loginSubmitSelector).click(), loginSubmitSelector);
-    await clickAndWaitForTarget(loginSubmitSelector);
+    await justClick(submitSelector);
+
+    // wait for targeting the system
+    await clickAndWaitForTarget(submitSelector);
 
   }
   catch (e) {
@@ -147,9 +175,9 @@ async function login() {
 async function systemNavigation() {
   try {
 
-    await page.waitFor(systemNavigationBarSelector);
+    // navigate to talent manager
     await page.waitFor(1000); // time for extra
-    await page.evaluate((systemApplicationsSelector) => document.querySelector(systemApplicationsSelector).click(), systemApplicationsSelector);
+    await justClick(navbarSelector);
     await page.waitFor(2000); // time for navigation
 
     if (DEBUG)
@@ -166,9 +194,7 @@ async function applicationFound() {
 
     // goto applications
     await page.waitFor(3000); // time for button
-    await page.waitFor(applicantTypeSelector);
-    await page.evaluate((applicantTypeSelector) => document.querySelector(applicantTypeSelector).click(), applicantTypeSelector);
-
+    await justClick(applicantTypeSelector);
     await page.waitFor(applicantIDSelector);
     await clickByText(`Applicant Israel ID`);
     await page.waitFor(3000); // time for data
@@ -187,10 +213,7 @@ async function assignmentRoutine() {
   try {
 
     // id
-    await page.waitFor(assignmentFieldSelector);
-    await page.evaluate((assignmentFieldSelector) => document.querySelector(assignmentFieldSelector).click(), assignmentFieldSelector);
-    await page.click(assignmentFieldSelector);
-    await page.type(assignmentFieldSelector, assignmentApplicantIDSelector);
+    await clickAndType(assignmentFieldSelector, assignmentApplicantIDSelector);
 
     // init search
     await page.waitFor(assignmentSearchButtonSelector);
@@ -202,8 +225,7 @@ async function assignmentRoutine() {
     await page.click(assignmentSearchButtonSelector);
 
     // go to workflow process
-    await page.waitFor(assignmentApplicantUserSelector);
-    await page.evaluate((assignmentApplicantUserSelector) => document.querySelector(assignmentApplicantUserSelector).click(), assignmentApplicantUserSelector);
+    await justClick(assignmentApplicantUserSelector);
     await page.waitFor(5000); // time for redirecting
 
     // reload new tab page
@@ -228,57 +250,180 @@ async function workflowProcessRoutine() {
 
     async function createLink() {
 
-      // select
-      await page.waitFor(2000); // time for select
-      await page.waitFor(workflowProcessLinkSelectSelector);
-      await page.select(workflowProcessLinkSelectSelector, workflowProcessLinkValueSelector);
+      try {
 
-      // submit
-      await page.waitFor(workflowProcessSubmitSelector);
-      await page.evaluate((workflowProcessSubmitSelector) => document.querySelector(workflowProcessSubmitSelector).click(), workflowProcessSubmitSelector);
-      await page.waitFor(workflowProcessWaitSelector);
+        // select
+        await page.waitFor(2000); // time for select
+        await justSelect(workflowProcessLinkSelectSelector, workflowProcessLinkValueSelector);
+
+        // submit
+        await justClick(workflowProcessSubmitSelector);
+        await page.waitFor(workflowProcessWaitSelector);
+      }
+      catch (e) {
+        if (DEBUG)
+          console.log('createLink: ' + e.message);
+      }
     }
 
     async function fullfillContract() {
 
-      async function selectData(id ,selector, data) {
+      async function selectData(id, selector, data) {
 
-        await page.waitFor(selector);
-        const option = (await page.$x(
-          `${id}/option[text() = "${data}"]`
-        ))[0];
-        const value = await (await option.getProperty('value')).jsonValue();
-        await page.select(selector, value);
+        try {
+          await page.waitFor(selector);
+          const option = (await page.$x(
+            `${id}/option[text() = "${data}"]`
+          ))[0];
+          const value = await (await option.getProperty('value')).jsonValue();
+          await page.select(selector, value);
+        }
+        catch (e) {
+          if (DEBUG)
+            console.log('selectData: ' + e.message);
+        }
       }
 
-      // contract
-      await page.waitFor(workflowProcessMakeSelector);
-      await clickByXPath(workflowProcessMakeSelector);
-      await page.waitFor(workflowProcessFormSelector);
 
-      // election
-      await selectData('//*[@id="employment-Department"]' ,workflowProcessContractDepartmentSelectSelector, workflowProcessContractDepartmentValueSelector);
+      try {
 
-      // position
-      await selectData('//*[@id="employment-Position"]' ,workflowProcessContractPositionSelectSelector, workflowProcessContractPositionValueSelector);
+        // contract
+        await page.waitFor(4000); // wait for delay time
+        await clickByXPath(workflowProcessMakeSelector);
+        await page.waitFor(workflowProcessFormSelector);
+
+        // election
+        await selectData('//*[@id="employment-Department"]', workflowProcessContractDepartmentSelectSelector, workflowProcessContractDepartmentValueSelector);
+        await page.waitFor(3000); // wait for selector
+
+        // position
+        // TODO: not working
+        await clickByXPath('//*[@id="employment-Position"]');
+
+        for (let i = 0; i < 4; i++)
+          await page.keyboard.press('ArrowDown');
+
+        await page.keyboard.press('Enter');
+        //await selectData('//*[@id="employment-Position"]', workflowProcessContractPositionSelectSelector, workflowProcessContractPositionValueSelector);
+
+        // date of hire
+        // TODO: delete old text and then type
+        await justClick(workflowProcessContractDateOfHireSelector);
+        await page.click(workflowProcessContractDateOfHireSelector);
+
+        for (let i = 0; i < 12; i++)
+          await page.keyboard.press('Backspace');
+
+        await page.type(workflowProcessContractDateOfHireSelector, workflowProcessContractDateOfHireValueSelector);
+        //await page.keyboard.type(workflowProcessContractDateOfHireValueSelector);
+        await page.keyboard.press('Enter');
+
+        /*
+        // pressing '14-06-2019'
+        await page.keyboard.press('1');
+        await page.keyboard.press('4');
+        await page.keyboard.press('-');
+        await page.keyboard.press('0');
+        await page.keyboard.press('6');
+        await page.keyboard.press('-');
+        await page.keyboard.press('2');
+        await page.keyboard.press('0');
+        await page.keyboard.press('1');
+        await page.keyboard.press('9');
+        */
+
+        // date of elections
+        // TODO: delete old text and then type
+        await justClick(workflowProcessContractDateOfElectionsSelector);
+        await page.click(workflowProcessContractDateOfElectionsSelector);
+
+        for (let i = 0; i < 12; i++)
+          await page.keyboard.press('Backspace');
+
+        await page.type(workflowProcessContractDateOfElectionsSelector, workflowProcessContractDateOfElectionsValueSelector);
+        await page.keyboard.press('Enter');
+        //await page.keyboard.type(workflowProcessContractDateOfElectionsValueSelector);
+
+        /*
+        // pressing '17-09-2019'
+        await page.keyboard.press('Key1');
+        await page.keyboard.press('Key7');
+        await page.keyboard.press('Key-');
+        await page.keyboard.press('Key0');
+        await page.keyboard.press('Key9');
+        await page.keyboard.press('Key-');
+        await page.keyboard.press('Key2');
+        await page.keyboard.press('Key0');
+        await page.keyboard.press('Key1');
+        await page.keyboard.press('Key9');
+        */
+
+        // confirm
+        await clickByXPath(workflowProcessContractConfirmSelector);
+
+        // complete
+        await clickByXPath('//*[@id="0"]/div/div/div[6]/div[3]/button[2]');
+        /*
+        await page.waitFor(workflowProcessContractConfirmSelector);
+        await page.evaluate((workflowProcessContractConfirmSelector) => document.querySelector(workflowProcessContractConfirmSelector).click(), workflowProcessContractConfirmSelector);
+        await page.click(workflowProcessContractConfirmSelector);
+        */
+      }
+      catch (e) {
+        if (DEBUG)
+          console.log('fullfillContract: ' + e.message);
+      }
     }
+
+    async function finalizeElectionWorker() {
+
+      try {
+
+        // enter
+        await clickByXPath(workflowProcessFinalizeButtonSelector);
+        /*
+        await page.waitFor(workflowProcessFinalizeButtonSelector);
+        await page.evaluate((workflowProcessFinalizeButtonSelector) => document.querySelector(workflowProcessFinalizeButtonSelector).click(), workflowProcessFinalizeButtonSelector);
+        await page.waitFor(workflowProcessPopupSelector);
+        */
+
+        // save
+        await clickByXPath(workflowProcessPopupSelector);
+        await page.waitFor(5000);
+
+        await page.waitFor(workflowProcessEndRoutineSelector);
+        await page.click(workflowProcessEndRoutineSelector);
+      }
+      catch (e) {
+        if (DEBUG)
+          console.log('finalizeElectionWorker: ' + e.message);
+      }
+    }
+
 
     // in workflow tab, press on 'Hiring Workflow' tab
     await page.waitFor(2000); // time for delay
     await page.waitFor(workflowProcessTabSelector);
     await page.waitFor(workflowProcessCheckSelector);
-    await page.waitFor(workflowProcessButtonSelector);
     await clickByXPath(workflowProcessButtonSelector);
 
     // a
-    await createLink();
+    //await createLink();
+
+    //await page.waitFor(4000); // wait for server delay
 
     // b
-    await fullfillContract();
+    //await fullfillContract();
 
+    await page.waitFor(4000); // wait for server delay
+
+    // c
+    await finalizeElectionWorker();
+
+    await page.waitFor(4000); // wait for server delay
 
     if (DEBUG)
-      console.log('4.b - Go to WorkFlow Process');
+      console.log('4.b - WorkFlow Process Ended');
   }
   catch (e) {
     if (DEBUG)
@@ -305,7 +450,7 @@ async function workflowProcessRoutine() {
   const browserOptions = {
     headless: isheadless, // so we can see the automation
     //userDataDir: path.join(__dirname + userDataLocation + num), // so we can save session data from one run to another. full path due to a bug in headlesschrome 
-    args: ['--no-sandbox']
+    args: ['--no-sandbox', '--start-fullscreen']
   };
 
 
