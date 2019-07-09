@@ -46,11 +46,9 @@ const workflowProcessContractDepartmentSelectSelector = 'select[id="employment-D
 const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
 const workflowProcessContractDateOfHireSelector = 'input[id="employment-EmploymentStart"]';
 const workflowProcessContractDateOfElectionsSelector = 'input[id="employment-EmploymentEnd"]';
-
-//const workflowProcessContractConfirmSelector = 'button[class="btn btn-success btn-sm"]';
+const workflowProcessContractCompleteSelector = 'button[class="btn btn-success btn-sm"]';
 //const workflowProcessFinalizeButtonSelector = 'button[class="btn btn-primary btn-sm"]';
-
-const workflowProcessContractConfirmSelector = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
+//const workflowProcessContractConfirmSelector = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
 const workflowProcessFinalizeButtonSelector = '//*[@id="1"]/div/div/div[22]/button[1]';
 
 //const workflowProcessPopupSelector = 'div[class="modal-content"]';
@@ -62,13 +60,13 @@ const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
 const assignmentApplicantIDSelector = '200656627';
 const workflowProcessContractDepartmentValueSelector = '01-ירושלים';
 const workflowProcessContractPositionValueSelector = 'טסט';
-const workflowProcessContractDateOfHireValueSelector = '14-06-2019';
+const workflowProcessContractDateOfHireValueSelector = '15-08-2019';
 const workflowProcessContractDateOfElectionsValueSelector = '17-09-2019';
 
 
 const DEBUG = true;
 const URL = 'pwm:9525';
-const END = false;
+const END = true;
 
 // global variables
 var browser = {};
@@ -361,11 +359,14 @@ async function workflowProcessRoutine() {
         await page.keyboard.press('Key9');
         */
 
-        // confirm
-        await clickByXPath(workflowProcessContractConfirmSelector);
+        // save
+        await page.waitFor(2000); // wait for delay of dating
+        await clickByXPath('//*[@id="addemployments-modal"]/div/div/div[3]/button[1]');
 
         // complete
-        await clickByXPath('//*[@id="0"]/div/div/div[6]/div[3]/button[2]');
+        await page.waitFor(15000); // wait for delay of saving
+        await justClick(workflowProcessContractCompleteSelector);
+        //await clickByXPath('//*[@id="0"]/div/div/div[6]/div[3]/button[2]');
         /*
         await page.waitFor(workflowProcessContractConfirmSelector);
         await page.evaluate((workflowProcessContractConfirmSelector) => document.querySelector(workflowProcessContractConfirmSelector).click(), workflowProcessContractConfirmSelector);
@@ -384,6 +385,7 @@ async function workflowProcessRoutine() {
 
         // enter
         await clickByXPath(workflowProcessFinalizeButtonSelector);
+        await page.waitFor(5000);
         /*
         await page.waitFor(workflowProcessFinalizeButtonSelector);
         await page.evaluate((workflowProcessFinalizeButtonSelector) => document.querySelector(workflowProcessFinalizeButtonSelector).click(), workflowProcessFinalizeButtonSelector);
@@ -392,10 +394,12 @@ async function workflowProcessRoutine() {
 
         // save
         await clickByXPath(workflowProcessPopupSelector);
-        await page.waitFor(5000);
 
-        await page.waitFor(workflowProcessEndRoutineSelector);
+        // clear
+        /*
+        await page.waitFor(45000);
         await page.click(workflowProcessEndRoutineSelector);
+        */
       }
       catch (e) {
         if (DEBUG)
@@ -411,19 +415,19 @@ async function workflowProcessRoutine() {
     await clickByXPath(workflowProcessButtonSelector);
 
     // a
-    //await createLink();
+    await createLink();
 
-    //await page.waitFor(4000); // wait for server delay
+    await page.waitFor(4000); // wait for server delay
 
     // b
-    //await fullfillContract();
+    await fullfillContract();
 
     await page.waitFor(4000); // wait for server delay
 
     // c
     await finalizeElectionWorker();
 
-    await page.waitFor(4000); // wait for server delay
+    await page.waitFor(20000); // wait for server delay
 
     if (DEBUG)
       console.log('4.b - WorkFlow Process Ended');
@@ -471,7 +475,7 @@ async function workflowProcessRoutine() {
     });
 
     if (DEBUG) {
-      console.log('Starting browser crawlering');
+      console.log('\x1b[36m%s\x1b[0m', 'Starting browser crawlering');
       console.log('Browser Version: ' + await browser.version());
     }
 
@@ -510,7 +514,7 @@ async function workflowProcessRoutine() {
     /* ROUTINE */
 
     // TODO: continue...
-    if (DEBUG)
+    if (false)
       console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
   catch (e) {
@@ -522,7 +526,7 @@ async function workflowProcessRoutine() {
   if (END) {
     await browser.close();
     if (DEBUG)
-      console.log('Closing browser crawlering');
+      console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
   }
 })();
 
