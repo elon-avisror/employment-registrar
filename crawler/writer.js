@@ -1,5 +1,79 @@
 const puppeteer = require('puppeteer');
-//var fs = require('fs');
+var fs = require('fs');
+const readXlsxFile = require('read-excel-file/node');
+
+// developer options
+const DEBUG = true;
+const URL = 'pwm:9525';
+const DEV = false;
+const PATH = 'C:\\Users\\a\\Documents\\projects\\pwm\\crawler\\excel.xlsx';
+
+const file = readXlsxFile(PATH).then((rows) => {
+
+  // `rows` is an array of rows
+  // each row being an array of cells.
+
+  // first row with the names of properties
+
+  rows.forEach(row => {
+    for (let i = 0; i < row.length; i++) {
+      switch (i) {
+
+        // IDNumber
+        case 0:
+          console.log('id: ' + row[i]);
+          break;
+
+        // FirstName
+        case 1:
+          console.log('FirstName: ' + row[i]);
+          break;
+
+        // LastName
+        case 2:
+          console.log('LastName: ' + row[i]);
+          break;
+
+        // email
+        case 3:
+          console.log('email: ' + row[i]);
+          break;
+
+        // TotalScore
+        case 4:
+          console.log('TotalScore: ' + row[i]);
+          break;
+
+        // JobCode
+        case 5:
+          console.log('JobCode: ' + row[i]);
+          break;
+
+        // קוד ועדה אזורית
+        case 6:
+          console.log('קוד ועדה אזורית: ' + row[i]);
+          break;
+
+        // שם ועדה אזורית
+        case 7:
+          console.log('שם ועדה אזורית: ' + row[i]);
+          break;
+
+        // an error
+        default:
+          throw new Error('Excel error');
+      }
+    }
+  });
+});
+
+console.log(file);
+
+/* readXlsxFile(fs.createReadStream(PATH)).then((rows) => {
+  console.log(rows);
+}); */
+
+
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -43,12 +117,16 @@ const workflowProcessWaitSelector = 'div[class="col-md-6"]';
 const workflowProcessMakeSelector = '//*[@id="0"]/div/div/div[6]/div[3]/button[1]';
 const workflowProcessFormSelector = '//*[@id="rfhTasksEmployment-details"]';
 const workflowProcessContractDepartmentSelectSelector = 'select[id="employment-Department"]';
-const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
+
+//const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
+
 const workflowProcessContractDateOfHireSelector = 'input[id="employment-EmploymentStart"]';
 const workflowProcessContractDateOfElectionsSelector = 'input[id="employment-EmploymentEnd"]';
 const workflowProcessContractCompleteSelector = 'button[class="btn btn-success btn-sm"]';
+
 //const workflowProcessFinalizeButtonSelector = 'button[class="btn btn-primary btn-sm"]';
 //const workflowProcessContractConfirmSelector = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
+
 const workflowProcessFinalizeButtonSelector = '//*[@id="1"]/div/div/div[22]/button[1]';
 
 //const workflowProcessPopupSelector = 'div[class="modal-content"]';
@@ -59,14 +137,11 @@ const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
 // EXCEL FILE DATA
 const assignmentApplicantIDSelector = '200656627';
 const workflowProcessContractDepartmentValueSelector = '01-ירושלים';
-const workflowProcessContractPositionValueSelector = 'טסט';
+
+//const workflowProcessContractPositionValueSelector = 'טסט';
+
 const workflowProcessContractDateOfHireValueSelector = '15-08-2019';
 const workflowProcessContractDateOfElectionsValueSelector = '17-09-2019';
-
-
-const DEBUG = true;
-const URL = 'pwm:9525';
-const END = true;
 
 // global variables
 var browser = {};
@@ -179,7 +254,7 @@ async function systemNavigation() {
     await page.waitFor(1000); // time for extra
     await justClick(systemApplicationsSelector);
     await page.waitFor(2000); // time for navigation
-    
+
 
     if (DEBUG)
       console.log('2 - Navigate');
@@ -462,7 +537,7 @@ async function workflowProcessRoutine() {
 
 
   try {
-    
+
     // 0 - set settings
     browser = await puppeteer.launch(browserOptions);
     page = await browser.newPage();
@@ -514,7 +589,7 @@ async function workflowProcessRoutine() {
     /* ROUTINE */
 
     // TODO: continue...
-    if (false)
+    if (DEV)
       console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
   catch (e) {
@@ -523,7 +598,7 @@ async function workflowProcessRoutine() {
   }
 
   // * - end
-  if (END) {
+  if (!DEV) {
     await browser.close();
     if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
