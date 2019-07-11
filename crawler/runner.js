@@ -66,11 +66,11 @@ const csvWriter = createCsvWriter({
                     data.push({
                         id: row['IDNumber'],
                         log: `applicant ${row['IDNumber']} registered in the system successfully`,
-                        status: res
+                        status: res.status
                     });
                 });
  
-                console.log(res);
+                console.log(res.status);
             
             }
             catch (e) {
@@ -81,7 +81,7 @@ const csvWriter = createCsvWriter({
                 data.push({
                     id: row['IDNumber'],
                     log: e.message,
-                    status: res
+                    status: res.status
                 });
             }
         });
