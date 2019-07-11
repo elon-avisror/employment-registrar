@@ -24,7 +24,7 @@ const csvWriter = createCsvWriter({
     header: [
         { id: 'id', title: 'IDNumber' },
         { id: 'log', title: 'LogInfo' },
-        { id: 'status', title: 'Status'}
+        { id: 'status', title: 'Status' }
     ]
 });
 
@@ -43,35 +43,41 @@ const csvWriter = createCsvWriter({
         const user = "jenya0025";
         const pass = "fvs3T73%T6";
         const data = [];
+        let content = true;
 
         csvReader.forEach(row => {
 
             // main code (for each row in applicants.csv file)
             try {
 
-                // CS: execute registrar.js file (each one at the time)
-                let cmd = `node crawler/registrar.js ${user} ${pass} ${row}`;
-                let res = child_process.execSync(cmd, (err, stdout, stderr) => {
-                    if (err) {
-                        console.error(err);
-                        // node couldn't execute the command
-                        return;
-                    }
- 
-                    // the *entire* stdout and stderr (buffered)
-                    console.log(`stdout: ${stdout}`);
-                    console.log(`stderr: ${stderr}`);
- 
-                    // success
-                    data.push({
-                        id: row['IDNumber'],
-                        log: `applicant ${row['IDNumber']} registered in the system successfully`,
-                        status: res.status
+                // for the first row
+                if (!content) {
+                    // CS: execute registrar.js file (each one at the time)
+                    let cmd = `node crawler/registrar.js ${user} ${pass} ${row}`;
+                    let res = child_process.execSync(cmd, (err, stdout, stderr) => {
+                        if (err) {
+                            console.error(err);
+                            // node couldn't execute the command
+                            return;
+                        }
+
+                        // the *entire* stdout and stderr (buffered)
+                        console.log(`stdout: ${stdout}`);
+                        console.log(`stderr: ${stderr}`);
+
+                        // success
+                        data.push({
+                            id: row['IDNumber'],
+                            log: `applicant ${row['IDNumber']} registered in the system successfully`,
+                            status: res.status
+                        });
                     });
-                });
- 
-                console.log(res.status);
-            
+
+                    console.log(res.status);
+                }
+
+                else
+                    content = false;
             }
             catch (e) {
 
