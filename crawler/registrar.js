@@ -1,5 +1,20 @@
 const puppeteer = require('puppeteer');
-//const fs = require('fs');
+
+/**
+ * args[0]: node (command)
+ * args[1]: registrar.js (filename)
+ * args[2]: user (string)
+ * args[3]: pass (string)
+ * args[4]: row (string)
+ */
+var args = process.argv;
+
+// get from the command line
+console.log(args);
+
+const user = args[2];
+const pass = args[3];
+const row = args[4];
 
 // developer options
 const DEBUG = true;
@@ -12,11 +27,6 @@ const DEV = false;
 const isheadless = false;
 const browserWidth = 1920 / 1.5;
 const browserHeight = 1080 / 1.5;
-//const userDataLocation = '/user_data_bn_';
-
-// TODO: get from the command line
-const userData = 'jenya0025';
-const passData = 'fvs3T73%T6';
 
 // 1 - login
 const userSelector = 'input[name="Email"]';
@@ -154,10 +164,10 @@ async function login() {
   try {
 
     // user
-    await clickAndType(userSelector, userData);
+    await clickAndType(userSelector, user);
 
     // password
-    await clickAndType(passSelector, passData);
+    await clickAndType(passSelector, pass);
 
     // submit
     await justClick(submitSelector);
@@ -451,18 +461,9 @@ async function workflowProcessRoutine() {
 // main script code
 (async () => {
 
-  /*
-  // make new directory
-  let num = 1;
-  while (fs.existsSync(__dirname + userDataLocation + num)) {
-    num++;
-  }
-  */
-
   // setting chrome environment
   const browserOptions = {
     headless: isheadless, // so we can see the automation
-    //userDataDir: path.join(__dirname + userDataLocation + num), // so we can save session data from one run to another. full path due to a bug in headlesschrome 
     args: ['--no-sandbox', '--start-fullscreen']
   };
 
@@ -534,6 +535,8 @@ async function workflowProcessRoutine() {
     if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
   }
-})();
 
+  // success
+  return 1;
+})();
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

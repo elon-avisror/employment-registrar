@@ -4,11 +4,13 @@
 
 _This puppeteer build for kneset-gil._
 
-1. assigner.js is a puppeteer script.
+1. registrar.js is a puppeteer script that register an applicant.
 
-2. reader.js is a reader from csv files script.
+2. runner.js is a batch file, that:
 
-3. runner.js is a batch that runs assigner.js script 10,000 times to all applicants in applicants.csv file and log that runs into log.csv file.
+    * first (once), it reads from applicant.csv file and for each row.
+    * it runs registrar.js (for all applicants).
+    * finally, it logs the output data into into log.csv file (whose collected).
 
 ### Made by _Elon Avisror_ \ ( ゜ o ゜)ノ
 
