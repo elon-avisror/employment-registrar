@@ -8,8 +8,8 @@ _This puppeteer build for kneset-gil._
 
 2. runner.js is a batch file, that:
 
-    * first (once), it reads from applicant.csv file and for each row.
-    * it runs registrar.js (for all applicants).
+    * first (once), it reads from applicant.csv file.
+    * for each row (in applicant.csv), it runs registrar.js (for all applicants).
     * finally, it logs the output data into into log.csv file (whose collected).
 
 ### Made by _Elon Avisror_ \ ( ゜ o ゜)ノ

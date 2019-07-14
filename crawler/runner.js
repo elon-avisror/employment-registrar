@@ -1,7 +1,7 @@
 const fs = require('fs');
 const loader = require('csv-load-sync');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-const child_process = require('child_process')
+const child_process = require('child_process');
 
 /**
  * args[0]: node (command)
@@ -14,7 +14,8 @@ const args = process.argv;
 // input and output files
 const READ = 'src/example.csv';
 const WRITE = 'src/log.csv';
-const DEV = true;
+const DEV = args.length == 4;
+const DEBUG = true;
 
 const csvReader = loader(READ);
 
@@ -36,48 +37,66 @@ const csvWriter = createCsvWriter({
     if (DEV) {
 
         // in production
-        //const user = args[2];
-        //const pass = args[3];
+        const user = args[2];
+        const pass = args[3];
 
         // in develop
-        const user = "jenya0025";
-        const pass = "fvs3T73%T6";
         const data = [];
-        let content = true;
 
         csvReader.forEach(row => {
 
             // main code (for each row in applicants.csv file)
             try {
 
-                // for the first row
-                if (!content) {
-                    // CS: execute registrar.js file (each one at the time)
-                    let cmd = `node crawler/registrar.js ${user} ${pass} ${row}`;
-                    let res = child_process.execSync(cmd, (err, stdout, stderr) => {
-                        if (err) {
-                            console.error(err);
-                            // node couldn't execute the command
-                            return;
-                        }
+                // get data from this row
+                const IDNumber = row['IDNumber'];
+                const firstName = row['FirstName'];
+                const lastName = row['LastName'];
+                const email = row['email'];
+                const totalScore = row['TotalScore'];
+                const jobCode = row['JobCode'];
+                const jobName = row['JobName'];
+                const regionalCommiteCode = row['קוד ועדה אזורית'];
+                const regionalCommiteName = row['שם ועדה אזורית'];
 
-                        // the *entire* stdout and stderr (buffered)
-                        console.log(`stdout: ${stdout}`);
-                        console.log(`stderr: ${stderr}`);
-
-                        // success
-                        data.push({
-                            id: row['IDNumber'],
-                            log: `applicant ${row['IDNumber']} registered in the system successfully`,
-                            status: res.status
-                        });
-                    });
-
-                    console.log(res.status);
+                if (DEBUG) {
+                    console.log('\x1b[36m%s\x1b[0m', 'runner.js file:')
+                    console.log('user: ' + user);
+                    console.log('pass: ' + pass);
+                    console.log('IDNumber :' + IDNumber);
+                    console.log('firstName :' + firstName);
+                    console.log('lastName :' + lastName);
+                    console.log('email :' + email);
+                    console.log('totalScore :' + totalScore);
+                    console.log('jobCode :' + jobCode);
+                    console.log('jobName :' + jobName);
+                    console.log('regionalCommiteCode :' + regionalCommiteCode);
+                    console.log('regionalCommiteName :' + regionalCommiteName + '\n');
                 }
 
-                else
-                    content = false;
+                // CS: execute registrar.js file (each one at the time)
+                let cmd = `node crawler/registrar.js "${user}" "${pass}" "${IDNumber}" "${firstName}" "${lastName}" "${email}" "${totalScore}" "${jobCode}" "${jobName}" "${regionalCommiteCode}" "${regionalCommiteName}"`;
+                let res = child_process.execSync(cmd, { stdio: 'inherit' }, (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(err);
+                        // node couldn't execute the command
+                        return;
+                    }
+
+                    // the *entire* stdout and stderr (buffered)
+                    console.log(`stdout: ${stdout}`);
+                    console.log(`stderr: ${stderr}`);
+
+                    // success
+                    data.push({
+                        id: row['IDNumber'],
+                        log: `applicant ${row['IDNumber']} registered in the system successfully`,
+                        status: res.status
+                    });
+                });
+
+                console.log(res);
+
             }
             catch (e) {
 

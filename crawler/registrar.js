@@ -5,16 +5,29 @@ const puppeteer = require('puppeteer');
  * args[1]: registrar.js (filename)
  * args[2]: user (string)
  * args[3]: pass (string)
- * args[4]: row (string)
+ * args[4]: IDNumber (string)
+ * args[5]: firstName (string)
+ * args[6]: lastName (string)
+ * args[7]: email (string)
+ * args[8]: totalScore (string)
+ * args[9]: jobCode (string)
+ * args[10]: jobName (string)
+ * args[11]: regionalCommiteCode (string)
+ * args[12]: regionalCommiteName (string)
  */
 var args = process.argv;
 
-// get from the command line
-console.log(args);
-
 const user = args[2];
 const pass = args[3];
-const row = args[4];
+const IDNumber = args[4];
+const firstName = args[5];
+const lastName = args[6];
+const email = args[7];
+const totalScore = args[8];
+const jobCode = args[9];
+const jobName = args[10];
+const regionalCommiteCode = args[11];
+const regionalCommiteName = args[12];
 
 // developer options
 const DEBUG = true;
@@ -50,39 +63,36 @@ const assignmentApplicantUserSelector = 'a[targer="_blank"]';
 // 4.b - workflow process
 const workflowProcessTabSelector = 'a[class="nav-link"]';
 const workflowProcessCheckSelector = 'li[data-bind="visible:CanViewRFH"]';
-const workflowProcessButtonSelector = '//*[@id="myTabs"]/li[9]/a';
+const workflowProcessButtonXPath = '//*[@id="myTabs"]/li[9]/a';
 const workflowProcessLinkSelectSelector = 'select[class="col-md-8 form-control"]';
 const workflowProcessLinkValueSelector = '18';
 const workflowProcessSubmitSelector = 'button[class="btn btn-success "]';
 const workflowProcessWaitSelector = 'div[class="col-md-6"]';
-const workflowProcessMakeSelector = '//*[@id="0"]/div/div/div[6]/div[3]/button[1]';
-const workflowProcessFormSelector = '//*[@id="rfhTasksEmployment-details"]';
+const workflowProcessMakeXPath = '//*[@id="0"]/div/div/div[6]/div[3]/button[1]';
+const workflowProcessFormXPath = '//*[@id="rfhTasksEmployment-details"]';
 const workflowProcessContractDepartmentSelectSelector = 'select[id="employment-Department"]';
-
-//const workflowProcessContractPositionSelectSelector = 'select[id="employment-Position"]';
-
+const workflowProcessContractDepartmentSelectXPath = '//*[@id="employment-Department"]';
+const workflowProcessContractPositionSelectXPath = '//*[@id="employment-Position"]';
+const workflowProcessContractPositionSelectSelector = 'select#employment-Position option';
 const workflowProcessContractDateOfHireSelector = 'input[id="employment-EmploymentStart"]';
 const workflowProcessContractDateOfElectionsSelector = 'input[id="employment-EmploymentEnd"]';
+const workflowProcessContractSaveXPath = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
 const workflowProcessContractCompleteSelector = 'button[class="btn btn-success btn-sm"]';
+const workflowProcessFinalizeButtonXPath = '//*[@id="1"]/div/div/div[22]/button[1]';
+const workflowProcessPopupXPath = '//*[@id="finalizeEmployee-modal"]/div/div/div[3]/button[1]';
 
-//const workflowProcessFinalizeButtonSelector = 'button[class="btn btn-primary btn-sm"]';
-//const workflowProcessContractConfirmSelector = '//*[@id="addemployments-modal"]/div/div/div[3]/button[1]';
+// getting assignment data from the csv file
+const assignmentApplicantID = IDNumber;
+const workflowProcessContractDepartmentValue = regionalCommiteName;
+const workflowProcessContractDateOfHireValue = '15-08-2019';
+const workflowProcessContractDateOfElectionsValue = '17-09-2019';
+const workflowProcessContractPositionNameValue = jobName;
 
-const workflowProcessFinalizeButtonSelector = '//*[@id="1"]/div/div/div[22]/button[1]';
+// TODO: check if it is auto
+const workflowProcessContractPositionCodeValue = jobCode;
 
-//const workflowProcessPopupSelector = 'div[class="modal-content"]';
-
-const workflowProcessPopupSelector = '//*[@id="finalizeEmployee-modal"]/div/div/div[3]/button[1]';
+// TODO: ???
 const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
-
-// EXCEL FILE DATA
-const assignmentApplicantIDSelector = '200656627';
-const workflowProcessContractDepartmentValueSelector = '01-ירושלים';
-
-//const workflowProcessContractPositionValueSelector = 'טסט';
-
-const workflowProcessContractDateOfHireValueSelector = '15-08-2019';
-const workflowProcessContractDateOfElectionsValueSelector = '17-09-2019';
 
 // global variables
 var browser = {};
@@ -108,6 +118,21 @@ async function isLocatorReady(element, page) {
   return false;
 }
 */
+
+if (DEBUG) {
+  console.log('\x1b[36m%s\x1b[0m', 'ragistrar.js file:')
+  console.log('user: ' + user);
+  console.log('pass: ' + pass);
+  console.log('IDNumber: ' + IDNumber);
+  console.log('firstName: ' + firstName);
+  console.log('lastName: ' + lastName);
+  console.log('email: ' + email);
+  console.log('totalScore: ' + totalScore);
+  console.log('jobCode: ' + jobCode);
+  console.log('jobName: ' + jobName);
+  console.log('regionalCommiteCode: ' + regionalCommiteCode);
+  console.log('regionalCommiteName: ' + regionalCommiteName + '\n');
+}
 
 const escapeXpathString = str => {
   const splitedQuotes = str.replace(/'/g, `', "'", '`);
@@ -230,7 +255,7 @@ async function assignmentRoutine() {
   try {
 
     // id
-    await clickAndType(assignmentFieldSelector, assignmentApplicantIDSelector);
+    await clickAndType(assignmentFieldSelector, assignmentApplicantID);
 
     // init search
     await page.waitFor(assignmentSearchButtonSelector);
@@ -270,7 +295,7 @@ async function workflowProcessRoutine() {
       try {
 
         // select
-        await page.waitFor(2000); // time for select
+        await page.waitFor(4000); // time for select
         await justSelect(workflowProcessLinkSelectSelector, workflowProcessLinkValueSelector);
 
         // submit
@@ -301,93 +326,63 @@ async function workflowProcessRoutine() {
         }
       }
 
-
       try {
 
         // contract
         await page.waitFor(4000); // wait for delay time
-        await clickByXPath(workflowProcessMakeSelector);
-        await page.waitFor(workflowProcessFormSelector);
+        await clickByXPath(workflowProcessMakeXPath);
+        await page.waitFor(workflowProcessFormXPath);
 
         // election
-        await selectData('//*[@id="employment-Department"]', workflowProcessContractDepartmentSelectSelector, workflowProcessContractDepartmentValueSelector);
+        await selectData(workflowProcessContractDepartmentSelectXPath, workflowProcessContractDepartmentSelectSelector, workflowProcessContractDepartmentValue);
         await page.waitFor(3000); // wait for selector
 
-        // position
-        // TODO: not working
-        await clickByXPath('//*[@id="employment-Position"]');
+        // position (job name)
+        await clickByXPath(workflowProcessContractPositionSelectXPath);
+        const dropdowns = await page.$$eval(workflowProcessContractPositionSelectSelector, all => all.map(a => a.textContent));
 
-        for (let i = 0; i < 4; i++)
-          await page.keyboard.press('ArrowDown');
+        for (let i = 0; i < dropdowns.length; i++) {
 
-        await page.keyboard.press('Enter');
-        //await selectData('//*[@id="employment-Position"]', workflowProcessContractPositionSelectSelector, workflowProcessContractPositionValueSelector);
+          if (dropdowns[i] == jobName) {
+            // success
+            await page.keyboard.press('Enter');
+            break;
+          }
+
+          else
+            // check if the text is equal jobName
+            await page.keyboard.press('ArrowDown');
+        }
+
+        // TODO: auto (job code)
 
         // date of hire
-        // TODO: delete old text and then type
         await justClick(workflowProcessContractDateOfHireSelector);
         await page.click(workflowProcessContractDateOfHireSelector);
 
         for (let i = 0; i < 12; i++)
           await page.keyboard.press('Backspace');
 
-        await page.type(workflowProcessContractDateOfHireSelector, workflowProcessContractDateOfHireValueSelector);
-        //await page.keyboard.type(workflowProcessContractDateOfHireValueSelector);
+        await page.type(workflowProcessContractDateOfHireSelector, workflowProcessContractDateOfHireValue);
         await page.keyboard.press('Enter');
 
-        /*
-        // pressing '14-06-2019'
-        await page.keyboard.press('1');
-        await page.keyboard.press('4');
-        await page.keyboard.press('-');
-        await page.keyboard.press('0');
-        await page.keyboard.press('6');
-        await page.keyboard.press('-');
-        await page.keyboard.press('2');
-        await page.keyboard.press('0');
-        await page.keyboard.press('1');
-        await page.keyboard.press('9');
-        */
-
         // date of elections
-        // TODO: delete old text and then type
         await justClick(workflowProcessContractDateOfElectionsSelector);
         await page.click(workflowProcessContractDateOfElectionsSelector);
 
         for (let i = 0; i < 12; i++)
           await page.keyboard.press('Backspace');
 
-        await page.type(workflowProcessContractDateOfElectionsSelector, workflowProcessContractDateOfElectionsValueSelector);
+        await page.type(workflowProcessContractDateOfElectionsSelector, workflowProcessContractDateOfElectionsValue);
         await page.keyboard.press('Enter');
-        //await page.keyboard.type(workflowProcessContractDateOfElectionsValueSelector);
-
-        /*
-        // pressing '17-09-2019'
-        await page.keyboard.press('Key1');
-        await page.keyboard.press('Key7');
-        await page.keyboard.press('Key-');
-        await page.keyboard.press('Key0');
-        await page.keyboard.press('Key9');
-        await page.keyboard.press('Key-');
-        await page.keyboard.press('Key2');
-        await page.keyboard.press('Key0');
-        await page.keyboard.press('Key1');
-        await page.keyboard.press('Key9');
-        */
 
         // save
         await page.waitFor(2000); // wait for delay of dating
-        await clickByXPath('//*[@id="addemployments-modal"]/div/div/div[3]/button[1]');
+        await clickByXPath(workflowProcessContractSaveXPath);
 
         // complete
         await page.waitFor(15000); // wait for delay of saving
-        await justClick(workflowProcessContractCompleteSelector);
-        //await clickByXPath('//*[@id="0"]/div/div/div[6]/div[3]/button[2]');
-        /*
-        await page.waitFor(workflowProcessContractConfirmSelector);
-        await page.evaluate((workflowProcessContractConfirmSelector) => document.querySelector(workflowProcessContractConfirmSelector).click(), workflowProcessContractConfirmSelector);
-        await page.click(workflowProcessContractConfirmSelector);
-        */
+        await justClick(workflowProcessContractCompleteSelector)
       }
       catch (e) {
         if (DEBUG)
@@ -400,16 +395,11 @@ async function workflowProcessRoutine() {
       try {
 
         // enter
-        await clickByXPath(workflowProcessFinalizeButtonSelector);
+        await clickByXPath(workflowProcessFinalizeButtonXPath);
         await page.waitFor(5000);
-        /*
-        await page.waitFor(workflowProcessFinalizeButtonSelector);
-        await page.evaluate((workflowProcessFinalizeButtonSelector) => document.querySelector(workflowProcessFinalizeButtonSelector).click(), workflowProcessFinalizeButtonSelector);
-        await page.waitFor(workflowProcessPopupSelector);
-        */
 
         // save
-        await clickByXPath(workflowProcessPopupSelector);
+        await clickByXPath(workflowProcessPopupXPath);
 
         // clear
         /*
@@ -428,7 +418,7 @@ async function workflowProcessRoutine() {
     await page.waitFor(2000); // time for delay
     await page.waitFor(workflowProcessTabSelector);
     await page.waitFor(workflowProcessCheckSelector);
-    await clickByXPath(workflowProcessButtonSelector);
+    await clickByXPath(workflowProcessButtonXPath);
 
     // a
     await createLink();
@@ -535,8 +525,8 @@ async function workflowProcessRoutine() {
     if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
   }
-
-  // success
-  return 1;
 })();
+
+// registrar.js success
+return 1;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
