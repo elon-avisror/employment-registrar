@@ -1,4 +1,3 @@
-const fs = require('fs');
 const loader = require('csv-load-sync');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const child_process = require('child_process');
@@ -10,12 +9,13 @@ const child_process = require('child_process');
  * args[3]: pass (string)
  */
 const args = process.argv;
+const settings = { encoding: 'utf8', /*stdio: 'inherit'*/ };
 
 // input and output files
 const READ = 'src/example.csv';
 const WRITE = 'src/log.csv';
 const DEV = args.length == 4;
-const DEBUG = true;
+const DEBUG = false;
 
 const csvReader = loader(READ);
 
@@ -25,7 +25,8 @@ const csvWriter = createCsvWriter({
     header: [
         { id: 'id', title: 'IDNumber' },
         { id: 'log', title: 'LogInfo' },
-        { id: 'status', title: 'Status' }
+        //{ id: 'record', title: 'Record' },
+        { id: 'errors', title: 'Errors' }
     ]
 });
 
@@ -63,20 +64,20 @@ const csvWriter = createCsvWriter({
                     console.log('\x1b[36m%s\x1b[0m', 'runner.js file:')
                     console.log('user: ' + user);
                     console.log('pass: ' + pass);
-                    console.log('IDNumber :' + IDNumber);
-                    console.log('firstName :' + firstName);
-                    console.log('lastName :' + lastName);
-                    console.log('email :' + email);
-                    console.log('totalScore :' + totalScore);
-                    console.log('jobCode :' + jobCode);
-                    console.log('jobName :' + jobName);
-                    console.log('regionalCommiteCode :' + regionalCommiteCode);
-                    console.log('regionalCommiteName :' + regionalCommiteName + '\n');
+                    console.log('IDNumber: ' + IDNumber);
+                    console.log('firstName: ' + firstName);
+                    console.log('lastName: ' + lastName);
+                    console.log('email: ' + email);
+                    console.log('totalScore: ' + totalScore);
+                    console.log('jobCode: ' + jobCode);
+                    console.log('jobName: ' + jobName);
+                    console.log('regionalCommiteCode: ' + regionalCommiteCode);
+                    console.log('regionalCommiteName: ' + regionalCommiteName + '\n');
                 }
 
                 // CS: execute registrar.js file (each one at the time)
-                let cmd = `node crawler/registrar.js "${user}" "${pass}" "${IDNumber}" "${firstName}" "${lastName}" "${email}" "${totalScore}" "${jobCode}" "${jobName}" "${regionalCommiteCode}" "${regionalCommiteName}"`;
-                let res = child_process.execSync(cmd, { stdio: 'inherit' }, (err, stdout, stderr) => {
+                const cmd = `node crawler/registrar.js "${user}" "${pass}" "${IDNumber}" "${firstName}" "${lastName}" "${email}" "${totalScore}" "${jobCode}" "${jobName}" "${regionalCommiteCode}" "${regionalCommiteName}"`;
+                const buf = child_process.execSync(cmd, settings, (err, stdout, stderr) => {
                     if (err) {
                         console.error(err);
                         // node couldn't execute the command
@@ -86,17 +87,33 @@ const csvWriter = createCsvWriter({
                     // the *entire* stdout and stderr (buffered)
                     console.log(`stdout: ${stdout}`);
                     console.log(`stderr: ${stderr}`);
+                });
+
+                const res = buf.split('#');
+                res[0].replace('\n', ' --> ')
+
+                if (Number(res[1]) == 0) {
 
                     // success
                     data.push({
                         id: row['IDNumber'],
-                        log: `applicant ${row['IDNumber']} registered in the system successfully`,
-                        status: res.status
+                        log: `applicant "${row['IDNumber']}" registered in the system successfully`,
+                        //record: res[0], // record
+                        errors: res[1] // errors
                     });
-                });
+                }
 
-                console.log(res);
+                // (Number(buf[1]) > 0)
+                else {
 
+                    // failed
+                    data.push({
+                        id: row['IDNumber'],
+                        log: `failed to register applicant "${row['IDNumber']}"`,
+                        //record: res[0], // record
+                        errors: res[1] // errors
+                    });
+                }
             }
             catch (e) {
 
@@ -105,8 +122,9 @@ const csvWriter = createCsvWriter({
                 // failed
                 data.push({
                     id: row['IDNumber'],
-                    log: e.message,
-                    status: res.status
+                    log: `failed to execute the command "${cmd}"`,
+                    //record: e.message, // record
+                    errors: '1' // errors
                 });
             }
         });
