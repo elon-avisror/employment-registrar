@@ -1,1 +1,23 @@
-
+IDNumber,LogInfo,Record,Errors
+200656627,"applicant ""200656627"" registered in the system successfully","1 - Loged in
+2 - Navigate
+3 - Application Found
+4.a - Found ID
+4.b - WorkFlow Process Ended
+",0
+328613229,"failed to register applicant ""328613229""","1 - Loged in
+2 - Navigate
+3 - Application Found
+4.a - Found ID
+fullfillContract: waiting for XPath ""//*[@id=""0""]/div/div/div[6]/div[3]/button[1]"" failed: timeout 30000ms exceeded
+finalizeElectionWorker: waiting for XPath ""//*[@id=""1""]/div/div/div[22]/button[1]"" failed: timeout 30000ms exceeded
+4.b - WorkFlow Process Ended
+",2
+237762927,"failed to register applicant ""237762927""","1 - Loged in
+2 - Navigate
+3 - Application Found
+4.a - Found ID
+fullfillContract: waiting for XPath ""//*[@id=""0""]/div/div/div[6]/div[3]/button[1]"" failed: timeout 30000ms exceeded
+finalizeElectionWorker: waiting for XPath ""//*[@id=""1""]/div/div/div[22]/button[1]"" failed: timeout 30000ms exceeded
+4.b - WorkFlow Process Ended
+",2
