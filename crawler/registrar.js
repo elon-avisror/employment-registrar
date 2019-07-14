@@ -30,7 +30,8 @@ const regionalCommiteCode = args[11];
 const regionalCommiteName = args[12];
 
 // developer options
-const DEBUG = true;
+const DEBUG = false;
+const SIGNAL = true;
 const URL = 'pwm:9525';
 const DEV = false;
 
@@ -97,6 +98,7 @@ const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
 // global variables
 var browser = {};
 var page = {};
+var err = 0;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -202,11 +204,13 @@ async function login() {
 
   }
   catch (e) {
-    if (DEBUG) {
+    if (SIGNAL) {
       if (e.message == 'Execution context was destroyed, most likely because of a navigation.')
         console.log('1 - Loged in');
-      else
+      else {
         console.log('login: ' + e.message);
+        err++;
+      }
     }
   }
   return page;
@@ -222,12 +226,14 @@ async function systemNavigation() {
     await page.waitFor(2000); // time for navigation
 
 
-    if (DEBUG)
+    if (SIGNAL)
       console.log('2 - Navigate');
   }
   catch (e) {
-    if (DEBUG)
+    if (SIGNAL) {
       console.log('systemNavigation: ' + e.message);
+      err++;
+    }
   }
 }
 
@@ -241,12 +247,14 @@ async function applicationFound() {
     await clickByText(`Applicant Israel ID`);
     await page.waitFor(3000); // time for data
 
-    if (DEBUG)
+    if (SIGNAL)
       console.log('3 - Application Found');
   }
   catch (e) {
-    if (DEBUG)
+    if (SIGNAL) {
       console.log('applicationFound: ' + e.message);
+      err++;
+    }
   }
 }
 
@@ -275,13 +283,15 @@ async function assignmentRoutine() {
     const size = pages.length;
     page = pages[size - 1];
 
-    if (DEBUG)
+    if (SIGNAL)
       console.log('4.a - Found ID');
 
   }
   catch (e) {
-    if (DEBUG)
+    if (SIGNAL) {
       console.log('assignmentRoutine: ' + e.message);
+      err++;
+    }
   }
 }
 
@@ -303,8 +313,10 @@ async function workflowProcessRoutine() {
         await page.waitFor(workflowProcessWaitSelector);
       }
       catch (e) {
-        if (DEBUG)
+        if (SIGNAL) {
           console.log('createLink: ' + e.message);
+          err++;
+        }
       }
     }
 
@@ -321,16 +333,18 @@ async function workflowProcessRoutine() {
           await page.select(selector, value);
         }
         catch (e) {
-          if (DEBUG)
+          if (SIGNAL) {
             console.log('selectData: ' + e.message);
+            err++;
+          }
         }
       }
 
       try {
 
         // contract
-        await page.waitFor(4000); // wait for delay time
-        await clickByXPath(workflowProcessMakeXPath);
+        await page.waitFor(15000); // wait for delay time
+        await clickByXPath(workflowProcessMakeXPath, {timeout: 60000});
         await page.waitFor(workflowProcessFormXPath);
 
         // election
@@ -385,8 +399,10 @@ async function workflowProcessRoutine() {
         await justClick(workflowProcessContractCompleteSelector)
       }
       catch (e) {
-        if (DEBUG)
+        if (SIGNAL) {
           console.log('fullfillContract: ' + e.message);
+          err++;
+        }
       }
     }
 
@@ -408,8 +424,10 @@ async function workflowProcessRoutine() {
         */
       }
       catch (e) {
-        if (DEBUG)
+        if (SIGNAL) {
           console.log('finalizeElectionWorker: ' + e.message);
+          err++;
+        }
       }
     }
 
@@ -435,12 +453,14 @@ async function workflowProcessRoutine() {
 
     await page.waitFor(20000); // wait for server delay
 
-    if (DEBUG)
+    if (SIGNAL)
       console.log('4.b - WorkFlow Process Ended');
   }
   catch (e) {
-    if (DEBUG)
+    if (SIGNAL) {
       console.log('workflowProcessRoutine: ' + e.message);
+      err++;
+    }
   }
 }
 
@@ -515,8 +535,10 @@ async function workflowProcessRoutine() {
       console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
   }
   catch (e) {
-    if (DEBUG)
+    if (SIGNAL) {
       console.log(e);
+      err++;
+    }
   }
 
   // * - end
@@ -525,8 +547,7 @@ async function workflowProcessRoutine() {
     if (DEBUG)
       console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
   }
-})();
 
-// registrar.js success
-return 1;
+  console.log('#' + err + '#');
+})();
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
