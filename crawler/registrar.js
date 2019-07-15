@@ -117,21 +117,6 @@ async function isLocatorReady(element, page) {
 }
 */
 
-if (DEBUG) {
-  console.log('\x1b[36m%s\x1b[0m', 'ragistrar.js file:')
-  console.log('user: ' + user);
-  console.log('pass: ' + pass);
-  console.log('idNumber: ' + idNumber);
-  console.log('firstName: ' + firstName);
-  console.log('lastName: ' + lastName);
-  console.log('email: ' + email);
-  console.log('score: ' + score);
-  console.log('jobCode: ' + jobCode);
-  console.log('jobName: ' + jobName);
-  console.log('regionalCommiteCode: ' + regionalCommiteCode);
-  console.log('regionalCommiteName: ' + regionalCommiteName + '\n');
-}
-
 const escapeXpathString = str => {
   const splitedQuotes = str.replace(/'/g, `', "'", '`);
   return `concat('${splitedQuotes}', '')`;
@@ -290,8 +275,6 @@ async function assignmentRoutine() {
     }
   }
 }
-
-
 
 async function workflowProcessRoutine() {
   try {
@@ -473,77 +456,99 @@ async function workflowProcessRoutine() {
     args: ['--no-sandbox', '--start-fullscreen']
   };
 
+  if (DEBUG) {
+    console.log('\x1b[36m%s\x1b[0m', 'ragistrar.js file:')
+    console.log('user: ' + user);
+    console.log('pass: ' + pass);
+    console.log('idNumber: ' + idNumber);
+    console.log('firstName: ' + firstName);
+    console.log('lastName: ' + lastName);
+    console.log('email: ' + email);
+    console.log('score: ' + score);
+    console.log('jobCode: ' + jobCode);
+    console.log('jobName: ' + jobName);
+    console.log('regionalCommiteCode: ' + regionalCommiteCode);
+    console.log('regionalCommiteName: ' + regionalCommiteName + '\n');
+  }
 
-  try {
+  if (args.length == 13) {
 
-    // 0 - set settings
-    browser = await puppeteer.launch(browserOptions);
-    page = await browser.newPage();
-    page.setCacheEnabled(false);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36');
-    await page.setViewport({
-      width: browserWidth,
-      height: browserHeight,
-      deviceScaleFactor: 2
-    });
+    try {
 
-    if (DEBUG) {
-      console.log('\x1b[36m%s\x1b[0m', 'Starting browser crawlering');
-      console.log('Browser Version: ' + await browser.version());
+      // 0 - set settings
+      browser = await puppeteer.launch(browserOptions);
+      page = await browser.newPage();
+      page.setCacheEnabled(false);
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36');
+      await page.setViewport({
+        width: browserWidth,
+        height: browserHeight,
+        deviceScaleFactor: 2
+      });
+  
+      if (DEBUG) {
+        console.log('\x1b[36m%s\x1b[0m', 'Starting browser crawlering');
+        console.log('Browser Version: ' + await browser.version());
+      }
+  
+      /*page = await browser.newPage();
+      page.setCacheEnabled(false);
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36');
+      await page.setViewport({
+        width: browserWidth,
+        height: browserHeight,
+        deviceScaleFactor: 2
+      }); */
+  
+      await page.goto(URL, { waitUntil: "networkidle2" });
+  
+      /* ONCE */
+  
+      // 1 - login
+      await login();
+  
+      // 2 - system navigation
+      await systemNavigation();
+  
+      // 3 - appliacations
+      await applicationFound();
+  
+      /* ONCE */
+  
+      /* ROUTINE */
+  
+      // 4.a - assignment
+      await assignmentRoutine();
+  
+      // 4.b - workflow process
+      await workflowProcessRoutine();
+  
+      /* ROUTINE */
+  
+      // TODO: continue...
+      if (DEV)
+        console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
     }
-
-    /*page = await browser.newPage();
-    page.setCacheEnabled(false);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3641.0 Safari/537.36');
-    await page.setViewport({
-      width: browserWidth,
-      height: browserHeight,
-      deviceScaleFactor: 2
-    }); */
-
-    await page.goto(URL, { waitUntil: "networkidle2" });
-
-    /* ONCE */
-
-    // 1 - login
-    await login();
-
-    // 2 - system navigation
-    await systemNavigation();
-
-    // 3 - appliacations
-    await applicationFound();
-
-    /* ONCE */
-
-    /* ROUTINE */
-
-    // 4.a - assignment
-    await assignmentRoutine();
-
-    // 4.b - workflow process
-    await workflowProcessRoutine();
-
-    /* ROUTINE */
-
-    // TODO: continue...
-    if (DEV)
-      console.log('\x1b[36m%s\x1b[0m', 'Waiting for more!')
-  }
-  catch (e) {
-    if (SIGNAL) {
-      console.log(e);
-      err++;
+    catch (e) {
+      if (SIGNAL) {
+        console.log(e);
+        err++;
+      }
     }
+  
+    // * - end
+    if (!DEV) {
+      await browser.close();
+      if (DEBUG)
+        console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
+    }
+  
+    console.log('#' + err + '#');
+
   }
 
-  // * - end
-  if (!DEV) {
-    await browser.close();
-    if (DEBUG)
-      console.log('\x1b[36m%s\x1b[0m', 'Closing browser crawlering');
-  }
-
-  console.log('#' + err + '#');
+  // args.length != 13
+  else
+    console.log('there is problem with the number of parameters that provided');
 })();
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END Crawling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
