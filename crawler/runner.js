@@ -101,7 +101,7 @@ const csvWriter = createCsvWriter({
                     });
                 }
 
-                // (Number(buf[1]) > 0)
+                // (Number(buf[1]) != 0)
                 else {
 
                     // failed
