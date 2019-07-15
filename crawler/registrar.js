@@ -1,29 +1,31 @@
 const puppeteer = require('puppeteer');
 
 /**
+ * get parameters from runner.js file
  * args[0]: node (command)
  * args[1]: registrar.js (filename)
  * args[2]: user (string)
  * args[3]: pass (string)
- * args[4]: IDNumber (string)
+ * args[4]: idNumber (string)
  * args[5]: firstName (string)
  * args[6]: lastName (string)
  * args[7]: email (string)
- * args[8]: totalScore (string)
+ * args[8]: score (string)
  * args[9]: jobCode (string)
  * args[10]: jobName (string)
  * args[11]: regionalCommiteCode (string)
  * args[12]: regionalCommiteName (string)
  */
+
 var args = process.argv;
 
 const user = args[2];
 const pass = args[3];
-const IDNumber = args[4];
+const idNumber = args[4];
 const firstName = args[5];
 const lastName = args[6];
 const email = args[7];
-const totalScore = args[8];
+const score = args[8];
 const jobCode = args[9];
 const jobName = args[10];
 const regionalCommiteCode = args[11];
@@ -83,17 +85,11 @@ const workflowProcessFinalizeButtonXPath = '//*[@id="1"]/div/div/div[22]/button[
 const workflowProcessPopupXPath = '//*[@id="finalizeEmployee-modal"]/div/div/div[3]/button[1]';
 
 // getting assignment data from the csv file
-const assignmentApplicantID = IDNumber;
+const assignmentApplicantID = idNumber;
 const workflowProcessContractDepartmentValue = regionalCommiteName;
-const workflowProcessContractDateOfHireValue = '15-08-2019';
-const workflowProcessContractDateOfElectionsValue = '17-09-2019';
-const workflowProcessContractPositionNameValue = jobName;
-
-// TODO: check if it is auto
-const workflowProcessContractPositionCodeValue = jobCode;
-
-// TODO: ???
-const workflowProcessEndRoutineSelector = 'button[class="btn btn-primary"]';
+const workflowProcessContractDateOfHireValue = '15-08-2019'; // TODO: search for it
+const workflowProcessContractDateOfElectionsValue = '17-09-2019'; // permanent
+const workflowProcessContractPositionCodeValue = jobCode; // TODO: check if it is auto
 
 // global variables
 var browser = {};
@@ -125,11 +121,11 @@ if (DEBUG) {
   console.log('\x1b[36m%s\x1b[0m', 'ragistrar.js file:')
   console.log('user: ' + user);
   console.log('pass: ' + pass);
-  console.log('IDNumber: ' + IDNumber);
+  console.log('idNumber: ' + idNumber);
   console.log('firstName: ' + firstName);
   console.log('lastName: ' + lastName);
   console.log('email: ' + email);
-  console.log('totalScore: ' + totalScore);
+  console.log('score: ' + score);
   console.log('jobCode: ' + jobCode);
   console.log('jobName: ' + jobName);
   console.log('regionalCommiteCode: ' + regionalCommiteCode);
