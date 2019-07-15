@@ -1,4 +1,4 @@
-idNumber,logInfo,errors
-200656627,"applicant ""200656627"" registered in the system successfully",0
-238939045,"applicant ""238939045"" registered in the system successfully",0
-237762927,"applicant ""237762927"" registered in the system successfully",0
+idNumber,logInfo,recordInfo,errors
+200656627,"applicant ""200656627"" registered in the system successfully",EXEC --> 1: Loged in --> 2: Navigate --> 3: Application Found --> 4.a: Found ID --> 4.b: WorkFlow Process Ended --> END,0
+238939045,"applicant ""238939045"" registered in the system successfully",EXEC --> 1: Loged in --> 2: Navigate --> 3: Application Found --> 4.a: Found ID --> 4.b: WorkFlow Process Ended --> END,0
+237762927,"applicant ""237762927"" registered in the system successfully",EXEC --> 1: Loged in --> 2: Navigate --> 3: Application Found --> 4.a: Found ID --> 4.b: WorkFlow Process Ended --> END,0

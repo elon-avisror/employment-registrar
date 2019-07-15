@@ -1,20 +1,15 @@
 const puppeteer = require('puppeteer');
 
 /**
- * get parameters from runner.js file
+ * get parameters from runner.js file (as strings)
  * args[0]: node (command)
  * args[1]: registrar.js (filename)
- * args[2]: user (string)
- * args[3]: pass (string)
- * args[4]: idNumber (string)
- * args[5]: firstName (string)
- * args[6]: lastName (string)
- * args[7]: email (string)
- * args[8]: score (string)
- * args[9]: jobCode (string)
- * args[10]: jobName (string)
- * args[11]: regionalCommiteCode (string)
- * args[12]: regionalCommiteName (string)
+ * args[2]: user
+ * args[3]: pass
+ * args[4]: idNumber
+ * args[5]: jobName
+ * args[6]: regionalCommiteName
+ * args[7]: dateOfHire
  */
 
 var args = process.argv;
@@ -22,48 +17,44 @@ var args = process.argv;
 const user = args[2];
 const pass = args[3];
 const idNumber = args[4];
-const firstName = args[5];
-const lastName = args[6];
-const email = args[7];
-const score = args[8];
-const jobCode = args[9];
-const jobName = args[10];
-const regionalCommiteCode = args[11];
-const regionalCommiteName = args[12];
+const jobName = args[5];
+const regionalCommiteName = args[6];
+const dateOfHire = args[7];
 
 // developer options
 const DEBUG = false;
+const PARAMS = args.length == 8;
 const SIGNAL = true;
 const URL = 'pwm:9525';
 const DEV = false;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START Hard Coded Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-// 0 - set settings
+// 0: set settings
 const isheadless = false;
 const browserWidth = 1920 / 1.5;
 const browserHeight = 1080 / 1.5;
 
-// 1 - login
+// 1: login
 const userSelector = 'input[name="Email"]';
 const passSelector = 'input[name="Password"]'
 const submitSelector = 'button[type="submit"]';
 
-// 2 - system navigation bar
+// 2: system navigation bar
 const systemNavBarSelector = '.has-sub';
 const systemApplicationsSelector = 'a[href="/WFM/TM/Application/List"]';
 
-// 3 - applications
+// 3: applications
 const applicantTypeSelector = 'span[data-bind="text: GetSelectedSearch()"]';
 const applicantIDSelector = 'a[href="#"]';
 
-// 4.a - assignment
+// 4.a: assignment
 const assignmentFieldSelector = 'input[class="input-xlarge form-control"]';
 const assignmentSearchButtonSelector = 'button[class="btn btn-success"]';
 const assignmentTableSelector = 'tbody[data-bind="foreach: Items"]';
 const assignmentApplicantUserSelector = 'a[targer="_blank"]';
 
-// 4.b - workflow process
+// 4.b: workflow process
 const workflowProcessTabSelector = 'a[class="nav-link"]';
 const workflowProcessCheckSelector = 'li[data-bind="visible:CanViewRFH"]';
 const workflowProcessButtonXPath = '//*[@id="myTabs"]/li[9]/a';
@@ -87,9 +78,11 @@ const workflowProcessPopupXPath = '//*[@id="finalizeEmployee-modal"]/div/div/div
 // getting assignment data from the csv file
 const assignmentApplicantID = idNumber;
 const workflowProcessContractDepartmentValue = regionalCommiteName;
-const workflowProcessContractDateOfHireValue = '15-08-2019'; // TODO: search for it
+const workflowProcessContractDateOfHireValue = dateOfHire;
 const workflowProcessContractDateOfElectionsValue = '17-09-2019'; // permanent
-const workflowProcessContractPositionCodeValue = jobCode; // TODO: check if it is auto
+
+// TODO: would they want me to check if it is auto
+//const workflowProcessContractPositionCodeValue = jobCode;
 
 // global variables
 var browser = {};
@@ -187,7 +180,7 @@ async function login() {
   catch (e) {
     if (SIGNAL) {
       if (e.message == 'Execution context was destroyed, most likely because of a navigation.')
-        console.log('1 - Loged in');
+        console.log('1: Loged in');
       else {
         console.log('login: ' + e.message);
         err++;
@@ -208,7 +201,7 @@ async function systemNavigation() {
 
 
     if (SIGNAL)
-      console.log('2 - Navigate');
+      console.log('2: Navigate');
   }
   catch (e) {
     if (SIGNAL) {
@@ -229,7 +222,7 @@ async function applicationFound() {
     await page.waitFor(3000); // time for data
 
     if (SIGNAL)
-      console.log('3 - Application Found');
+      console.log('3: Application Found');
   }
   catch (e) {
     if (SIGNAL) {
@@ -265,7 +258,7 @@ async function assignmentRoutine() {
     page = pages[size - 1];
 
     if (SIGNAL)
-      console.log('4.a - Found ID');
+      console.log('4.a: Found ID');
 
   }
   catch (e) {
@@ -433,7 +426,7 @@ async function workflowProcessRoutine() {
     await page.waitFor(20000); // wait for server delay
 
     if (SIGNAL)
-      console.log('4.b - WorkFlow Process Ended');
+      console.log('4.b: WorkFlow Process Ended');
   }
   catch (e) {
     if (SIGNAL) {
@@ -461,21 +454,16 @@ async function workflowProcessRoutine() {
     console.log('user: ' + user);
     console.log('pass: ' + pass);
     console.log('idNumber: ' + idNumber);
-    console.log('firstName: ' + firstName);
-    console.log('lastName: ' + lastName);
-    console.log('email: ' + email);
-    console.log('score: ' + score);
-    console.log('jobCode: ' + jobCode);
     console.log('jobName: ' + jobName);
-    console.log('regionalCommiteCode: ' + regionalCommiteCode);
-    console.log('regionalCommiteName: ' + regionalCommiteName + '\n');
+    console.log('regionalCommiteName: ' + regionalCommiteName);
+    console.log('dateOfHire: ' + dateOfHire + '\n');
   }
 
-  if (args.length == 13) {
+  if (PARAMS) {
 
     try {
 
-      // 0 - set settings
+      // 0: set settings
       browser = await puppeteer.launch(browserOptions);
       page = await browser.newPage();
       page.setCacheEnabled(false);
@@ -504,23 +492,23 @@ async function workflowProcessRoutine() {
   
       /* ONCE */
   
-      // 1 - login
+      // 1: login
       await login();
   
-      // 2 - system navigation
+      // 2: system navigation
       await systemNavigation();
   
-      // 3 - appliacations
+      // 3: appliacations
       await applicationFound();
   
       /* ONCE */
   
       /* ROUTINE */
   
-      // 4.a - assignment
+      // 4.a: assignment
       await assignmentRoutine();
   
-      // 4.b - workflow process
+      // 4.b: workflow process
       await workflowProcessRoutine();
   
       /* ROUTINE */
@@ -536,7 +524,7 @@ async function workflowProcessRoutine() {
       }
     }
   
-    // * - end
+    // *: end
     if (!DEV) {
       await browser.close();
       if (DEBUG)
@@ -547,7 +535,7 @@ async function workflowProcessRoutine() {
 
   }
 
-  // args.length != 13
+  // args.length != 8
   else
     console.log('there is problem with the number of parameters that provided');
 })();
